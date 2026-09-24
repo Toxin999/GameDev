@@ -19,6 +19,7 @@ new Phaser.Game({
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   pixelArt: true,
+  roundPixels: true,
   backgroundColor: '#14151f',
   scale: {
     mode: Phaser.Scale.FIT,

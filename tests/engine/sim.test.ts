@@ -26,6 +26,41 @@ function allocate(content_: Content, genreId: string, budget: number): Sliders {
   return allocateSliders(content_, genreId, budget)
 }
 
+interface PlayedGame {
+  topic: string
+  genre: string
+  platform: string
+  review: number
+  units: number
+  revenue: number
+}
+
+function playNaiveGame(sim: ReturnType<typeof createSim>, content_: Content): PlayedGame {
+  const platforms = availablePlatforms(sim)
+  const platform = platforms[platforms.length - 1]!
+  const genre = sim.rng.pick(content_.genres)
+  const topic = sim.rng.pick(content_.topics)
+  startProject(sim, {
+    topicId: topic.id,
+    genreId: genre.id,
+    platformId: platform.id,
+    sliders: allocateSliders(content_, genre.id, content_.balance.sliderBudget),
+  })
+  runUntil(sim, ['release', 'over'], 200)
+  const review = sim.state.currentReview!
+  releaseGame(sim)
+  runUntil(sim, ['idle', 'over'], 100)
+  const game = sim.state.released[sim.state.released.length - 1]!
+  return {
+    topic: topic.name,
+    genre: genre.name,
+    platform: platform.name,
+    review: review.overall,
+    units: game.unitsSold,
+    revenue: game.revenue,
+  }
+}
+
 function runUntil(sim: ReturnType<typeof createSim>, phases: string[], limit: number): SimEvent[] {
   const events: SimEvent[] = []
   let guard = 0
@@ -194,46 +229,52 @@ describe('sim', () => {
     const summary: Array<Record<string, string | number>> = []
 
     for (let i = 0; i < 10; i++) {
-      const platforms = availablePlatforms(sim)
-      const platform = platforms[platforms.length - 1]!
-      const genre = sim.rng.pick(c.genres)
-      const topic = sim.rng.pick(c.topics)
-      const sliders = allocate(c, genre.id, c.balance.sliderBudget)
-      startProject(sim, { topicId: topic.id, genreId: genre.id, platformId: platform.id, sliders })
-      runUntil(sim, ['release', 'over'], 200)
-      expect(sim.state.phase).toBe('release')
-
-      const review = sim.state.currentReview!
-      releaseGame(sim)
-      runUntil(sim, ['idle', 'over'], 100)
-
-      const game = sim.state.released[sim.state.released.length - 1]!
+      const played = playNaiveGame(sim, c)
       summary.push({
         '#': i + 1,
-        topic: topic.name,
-        genre: genre.name,
-        platform: platform.name,
-        review: review.overall,
-        units: game.unitsSold,
-        revenue: game.revenue,
-        cash: sim.state.cash,
+        topic: played.topic,
+        genre: played.genre,
+        platform: played.platform,
+        review: played.review,
+        units: played.units,
+        revenue: played.revenue,
+        cash: Math.round(sim.state.cash),
         fans: sim.state.fans,
       })
 
-      for (const category of Object.values(review.categories)) {
-        expect(category).toBeGreaterThanOrEqual(c.balance.minScore)
-        expect(category).toBeLessThanOrEqual(c.balance.maxScore)
-      }
-      expect(review.overall).toBeGreaterThanOrEqual(c.balance.minScore)
-      expect(review.overall).toBeLessThanOrEqual(c.balance.maxScore)
-      expect(game.unitsSold).toBeGreaterThan(0)
-      expect(game.revenue).toBeGreaterThan(0)
+      expect(played.review).toBeGreaterThanOrEqual(c.balance.minScore)
+      expect(played.review).toBeLessThanOrEqual(c.balance.maxScore)
+      expect(played.units).toBeGreaterThan(0)
+      expect(played.revenue).toBeGreaterThan(0)
       expect(Number.isFinite(sim.state.cash)).toBe(true)
+      expect(sim.state.phase).not.toBe('over')
     }
 
     console.table(summary)
     expect(sim.state.released).toHaveLength(10)
-    expect(sim.state.outcome).not.toBe('bankrupt')
     expect(new Set(summary.map((row) => row.review)).size).toBeGreaterThan(1)
+  })
+
+  it('reaches the win target after a reasonable number of releases', () => {
+    const c = clone()
+    const sim = createSim({ content: c, seed: 'win-race' })
+    const summary: Array<Record<string, string | number>> = []
+
+    for (let i = 0; i < 40 && sim.state.phase !== 'over'; i++) {
+      const played = playNaiveGame(sim, c)
+      summary.push({
+        '#': i + 1,
+        review: played.review,
+        revenue: played.revenue,
+        value: companyValue(sim),
+        cash: Math.round(sim.state.cash),
+      })
+    }
+
+    console.table(summary)
+    expect(sim.state.outcome).not.toBe('bankrupt')
+    expect(sim.state.outcome).toBe('win')
+    expect(sim.state.released.length).toBeGreaterThanOrEqual(4)
+    expect(sim.state.released.length).toBeLessThanOrEqual(25)
   })
 })

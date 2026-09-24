@@ -13,6 +13,28 @@ Inspired by the genre, not a copy: all content, balance values and art are origi
 - Cloudflare Workers + D1 (cloud saves, leaderboard)
 - Vitest (engine and helper unit tests)
 
+## How to play
+
+1. `NEW GAME` starts a solo studio in a garage in 1981.
+2. `NEW PROJECT` → pick a topic, genre and platform (platforms unlock and retire over the years).
+3. Allocate 16 weeks of work across engine, gameplay, story, graphics and sound — matching the genre
+   helps, and high tech platforms need engine time.
+4. Watch the clock: the dev types, bugs pile up, and a review lands when the project is done.
+5. Fix bugs for $500 and a week each, then ship. Sales run for 12 weeks, then you get a report.
+6. Grow the studio value to $500,000 without running out of cash.
+
+Mouse or touch both work; `T` ticks a week and `R` releases in short bursts (dev convenience).
+`?scene=Office|DevSandbox|AssetInspector|ProjectSetup|Review|Report|GameOver|Leaderboard` jumps
+straight to a scene when developing.
+
+## Notes
+
+- Mobile: the canvas fits any screen (portrait included) and touch input works; text gets small on
+  phones, and a dedicated small-screen layout is future work.
+- Audio: Web Audio starts after the first click, so the first click of a session may be silent.
+- Saves live in localStorage and are backed up to the cloud; without a network the game is fully
+  playable and syncs later.
+
 ## Development
 
 ```bash
@@ -69,4 +91,7 @@ trust-based apart from sanity caps.
 | M4 | Dev flow screens wired to engine |
 | M5 | Sales, money, win/lose, local save |
 | M6 | Cloud saves + leaderboard (Workers + D1) |
-| M7 | Polish, balance, mobile, deploy |
+| M7 | Polish, balance, audio, mobile, deploy |
+
+Next ideas: research system (unlock topics and engine tech levels), staff hiring, cross-device sync
+codes, marketing campaigns and post-release patches.

@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { playSfx } from '../game/audio'
 import { COLOR, FONT_SIZE, centerText, rectHitArea, textStyle } from './theme'
 
 export type ButtonStyle = 'default' | 'primary' | 'danger'
@@ -94,6 +95,7 @@ export class Button extends Phaser.GameObjects.Container {
       if (!this.isEnabled || !this.pressed) return
       this.pressed = false
       this.redraw()
+      playSfx(this.scene, 'click')
       this.onClick?.()
     })
 

@@ -4,11 +4,11 @@
     "startYear": 1981,
     "weeksPerMonth": 4,
     "monthsPerYear": 12,
-    "weeklyCost": 300,
+    "weeklyCost": 450,
     "sliderBudget": 16,
     "pointsPerUnit": 12,
     "pointsPerWeek": 12,
-    "devCostPerUnit": 350,
+    "devCostPerUnit": 700,
     "enginePointsPerTechLevel": 15,
     "overTechPenalty": 0.15,
     "bugChanceBase": 0.12,
@@ -33,7 +33,16 @@
       "tech": 0.18
     },
     "distPenalty": 1.4,
-    "lifecycle": [0.4, 0.85, 1.0, 1.0, 0.85, 0.65, 0.45, 0.3],
+    "lifecycle": [
+      0.4,
+      0.85,
+      1.0,
+      1.0,
+      0.85,
+      0.65,
+      0.45,
+      0.3
+    ],
     "salesBase": 2500,
     "salesReviewExponent": 2.2,
     "salesWeeks": 12,
@@ -42,6 +51,6 @@
     "fanConversion": 0.02,
     "fanFactorDivisor": 20000,
     "revenueValuation": 0.5,
-    "winValue": 250000
+    "winValue": 500000
   }
 }

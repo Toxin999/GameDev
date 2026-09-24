@@ -3,6 +3,7 @@ import { GAME_WIDTH } from '../config'
 import type { Sim } from '../engine/sim'
 import { companyValue } from '../engine/sim'
 import type { LeaderboardEntry } from '../game/cloud'
+import { playSfx } from '../game/audio'
 import { fetchLeaderboard, getStudioName, submitScore } from '../game/cloud'
 import { getSession } from '../game/session'
 import { Button } from '../ui/Button'
@@ -79,7 +80,12 @@ export class LeaderboardScene extends Phaser.Scene {
     this.busy = false
     this.submitButton.setEnabled(true)
     await this.refresh()
-    if (rank) this.statusText.setText(`${getStudioName()} IS NOW RANK #${rank}`)
+    if (rank) {
+      playSfx(this, 'success')
+      this.statusText.setText(`${getStudioName()} IS NOW RANK #${rank}`)
+    } else {
+      playSfx(this, 'error')
+    }
   }
 
   private clearRows(): void {

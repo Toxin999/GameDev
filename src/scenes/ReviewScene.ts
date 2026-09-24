@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../config'
 import type { Sim } from '../engine/sim'
 import { findGenre, findPlatform, findTopic, fixBug, releaseGame } from '../engine/sim'
+import { playSfx } from '../game/audio'
 import { getSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import { Panel } from '../ui/Panel'
@@ -111,7 +112,9 @@ export class ReviewScene extends Phaser.Scene {
   private fix(): void {
     try {
       fixBug(this.sim)
+      playSfx(this, 'select')
     } catch (error) {
+      playSfx(this, 'error')
       this.bugsText.setText((error as Error).message.toUpperCase())
     }
     this.refresh()
@@ -119,6 +122,7 @@ export class ReviewScene extends Phaser.Scene {
 
   private ship(): void {
     releaseGame(this.sim)
+    playSfx(this, 'success')
     this.close()
   }
 

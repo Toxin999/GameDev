@@ -13,6 +13,11 @@
 - Files: `public/assets/indoor/furniture.png`, `public/assets/indoor/walls_floor_doors.png`
 - Used for: office furniture, walls, window, paintings
 
+**Interface Sounds** — Kenney (CC0 1.0 Universal)
+- Source: https://opengameart.org/content/interface-sounds
+- Files: `public/audio/*.ogg` (license copy: `public/audio/LICENSE-kenney-interface-sounds.txt`)
+- Used for: UI clicks, confirmations, errors and reward feedback
+
 **Silkscreen** — Jason Kottke (SIL Open Font License 1.1)
 - Source: https://github.com/google/fonts/tree/main/ofl/silkscreen
 - Files: `public/fonts/Silkscreen-Regular.ttf`, `public/fonts/Silkscreen-Bold.ttf`

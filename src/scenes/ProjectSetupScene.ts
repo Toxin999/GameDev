@@ -17,6 +17,7 @@ import { platformFitFor, topicFitFor } from '../engine/score'
 import { STAGE_IDS } from '../engine/types'
 import type { Genre, Platform, Sliders, StageId, Topic } from '../engine/types'
 import { allocateSliders } from '../game/allocate'
+import { playSfx } from '../game/audio'
 import { getSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import { Panel } from '../ui/Panel'
@@ -337,8 +338,10 @@ export class ProjectSetupScene extends Phaser.Scene {
         platformId: this.platformId,
         sliders: this.sliders,
       })
+      playSfx(this, 'select')
       this.close()
     } catch (error) {
+      playSfx(this, 'error')
       this.warningText.setText((error as Error).message.toUpperCase())
     }
   }

@@ -21,6 +21,7 @@ import {
 } from '../game/officeLayout'
 import type { Direction } from '../game/officeLayout'
 import type { GameProject } from '../engine/types'
+import { playSfx } from '../game/audio'
 import { getStudioName, submitScore } from '../game/cloud'
 import { getSession, resumeSession, saveSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
@@ -103,6 +104,7 @@ export class OfficeScene extends Phaser.Scene {
     this.time.addEvent({ delay: TICK_MS, loop: true, callback: () => this.clock() })
 
     const onResume = () => {
+      this.cameras.main.setVisible(true)
       saveSession()
       this.refresh()
       this.enterPhase(this.sim.state.phase)
@@ -305,6 +307,7 @@ export class OfficeScene extends Phaser.Scene {
     if (events.some((event) => event.type === 'dev-complete')) this.onDevComplete()
     if (salesEnd && salesEnd.type === 'sales-end') {
       this.toast(`${salesEnd.game.unitsSold.toLocaleString('en-US')} UNITS  $${salesEnd.game.revenue.toLocaleString('en-US')}`)
+      playSfx(this, 'money')
       void submitScore(this.sim)
       this.openReport()
     }
@@ -395,6 +398,7 @@ export class OfficeScene extends Phaser.Scene {
       releaseGame(this.sim)
       this.dev.play('idle-down', true)
       this.cameras.main.flash(180, 255, 255, 255)
+      playSfx(this, 'success')
       this.refresh()
       return
     }
@@ -404,30 +408,34 @@ export class OfficeScene extends Phaser.Scene {
     }
   }
 
-  private openSetup(): void {
-    this.scene.launch('ProjectSetup')
+  private openOverlay(key: string, data?: object): void {
+    this.cameras.main.setVisible(false)
+    this.scene.launch(key, data)
     this.scene.pause()
+  }
+
+  private openSetup(): void {
+    this.openOverlay('ProjectSetup')
   }
 
   private openReport(): void {
     if (this.sim.state.released.length === 0) return
-    this.scene.launch('Report', { index: this.sim.state.released.length - 1 })
-    this.scene.pause()
+    this.openOverlay('Report', { index: this.sim.state.released.length - 1 })
   }
 
   private onDevComplete(): void {
     if (!this.sim.state.currentReview) return
     this.enterPhase('release')
     this.toast(`REVIEW ${this.sim.state.currentReview.overall.toFixed(1)} / 10`)
-    this.scene.launch('Review')
-    this.scene.pause()
+    playSfx(this, 'select')
+    this.openOverlay('Review')
   }
 
   private onGameOver(): void {
     saveSession()
+    playSfx(this, this.sim.state.outcome === 'win' ? 'success' : 'error')
     void submitScore(this.sim)
-    this.scene.launch('GameOver')
-    this.scene.pause()
+    this.openOverlay('GameOver')
   }
 
   private backToMenu(): Promise<void> {
