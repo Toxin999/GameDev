@@ -1,0 +1,69 @@
+{
+  "start": {
+    "topics": ["space", "fantasy", "racing", "sports"],
+    "genres": ["action", "adventure", "casual"],
+    "techLevel": 1
+  },
+  "nodes": [
+    { "id": "topic-horror", "name": "HORROR", "kind": "topic", "target": "horror", "costRp": 10, "costCash": 4000, "weeks": 2 },
+    { "id": "topic-war", "name": "WAR", "kind": "topic", "target": "war", "costRp": 12, "costCash": 5000, "weeks": 2 },
+    { "id": "topic-detective", "name": "DETECTIVE", "kind": "topic", "target": "detective", "costRp": 12, "costCash": 5000, "weeks": 2 },
+    { "id": "topic-cooking", "name": "COOKING", "kind": "topic", "target": "cooking", "costRp": 10, "costCash": 4000, "weeks": 2 },
+    { "id": "topic-pirates", "name": "PIRATES", "kind": "topic", "target": "pirates", "costRp": 14, "costCash": 6000, "weeks": 2 },
+    { "id": "topic-zombies", "name": "ZOMBIES", "kind": "topic", "target": "zombies", "costRp": 14, "costCash": 6000, "weeks": 2 },
+    { "id": "topic-music", "name": "MUSIC", "kind": "topic", "target": "music", "costRp": 10, "costCash": 4000, "weeks": 2 },
+    {
+      "id": "topic-cyberpunk",
+      "name": "CYBERPUNK",
+      "kind": "topic",
+      "target": "cyberpunk",
+      "costRp": 20,
+      "costCash": 9000,
+      "weeks": 3,
+      "requires": ["tech-2"]
+    },
+    { "id": "genre-rpg", "name": "RPG", "kind": "genre", "target": "rpg", "costRp": 20, "costCash": 10000, "weeks": 3 },
+    { "id": "genre-strategy", "name": "STRATEGY", "kind": "genre", "target": "strategy", "costRp": 25, "costCash": 12000, "weeks": 3 },
+    {
+      "id": "genre-sim",
+      "name": "SIMULATION",
+      "kind": "genre",
+      "target": "sim",
+      "costRp": 22,
+      "costCash": 11000,
+      "weeks": 3,
+      "requires": ["tech-2"]
+    },
+    { "id": "tech-2", "name": "ENGINE MK2", "kind": "tech", "level": 2, "costRp": 15, "costCash": 8000, "weeks": 3 },
+    {
+      "id": "tech-3",
+      "name": "ENGINE MK3",
+      "kind": "tech",
+      "level": 3,
+      "costRp": 30,
+      "costCash": 20000,
+      "weeks": 4,
+      "requires": ["tech-2"]
+    },
+    {
+      "id": "tech-4",
+      "name": "ENGINE MK4",
+      "kind": "tech",
+      "level": 4,
+      "costRp": 50,
+      "costCash": 40000,
+      "weeks": 5,
+      "requires": ["tech-3"]
+    },
+    {
+      "id": "tech-5",
+      "name": "ENGINE MK5",
+      "kind": "tech",
+      "level": 5,
+      "costRp": 75,
+      "costCash": 70000,
+      "weeks": 6,
+      "requires": ["tech-4"]
+    }
+  ]
+}

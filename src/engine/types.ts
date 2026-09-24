@@ -83,6 +83,37 @@ export interface Balance {
   fanFactorDivisor: number
   revenueValuation: number
   winValue: number
+  rpBase: number
+  rpPerPoint: number
+  techFitBonusPerLevel: number
+}
+
+export type ResearchKind = 'topic' | 'genre' | 'tech'
+
+export interface ResearchNode {
+  id: string
+  name: string
+  kind: ResearchKind
+  target?: string
+  level?: number
+  costRp: number
+  costCash: number
+  weeks: number
+  requires?: string[]
+}
+
+export interface ResearchConfig {
+  start: {
+    topics: string[]
+    genres: string[]
+    techLevel: number
+  }
+  nodes: ResearchNode[]
+}
+
+export interface ResearchTask {
+  nodeId: string
+  weeksLeft: number
 }
 
 export interface Content {
@@ -90,6 +121,7 @@ export interface Content {
   genres: Genre[]
   platforms: Platform[]
   balance: Balance
+  research: ResearchConfig
 }
 
 export type Sliders = Record<StageId, number>
@@ -152,6 +184,10 @@ export interface SimState {
   currentReview: Review | null
   sales: SalesRun | null
   released: ReleasedGame[]
+  researchPoints: number
+  techLevel: number
+  unlocked: string[]
+  research: ResearchTask | null
 }
 
 export type SimEvent =
@@ -163,4 +199,7 @@ export type SimEvent =
   | { type: 'review'; review: Review }
   | { type: 'sales-week'; units: number; revenue: number }
   | { type: 'sales-end'; game: ReleasedGame }
+  | { type: 'research-started'; nodeId: string }
+  | { type: 'research-complete'; nodeId: string }
+  | { type: 'research-points'; amount: number; total: number }
   | { type: 'game-over'; outcome: Outcome }

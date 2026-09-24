@@ -1,14 +1,16 @@
 import balanceJson from './balance.json'
 import genresJson from './genres.json'
 import platformsJson from './platforms.json'
+import researchJson from './research.json'
 import topicsJson from './topics.json'
-import type { Content } from '../engine/types'
+import type { Content, ResearchConfig } from '../engine/types'
 
 export const content: Content = {
   topics: topicsJson.topics,
   genres: genresJson.genres,
   platforms: platformsJson.platforms,
   balance: balanceJson.balance,
+  research: researchJson as ResearchConfig,
 }
 
 function findDuplicates(ids: string[]): string[] {
@@ -50,6 +52,47 @@ export function validateContent(c: Content): string[] {
     }
     if (platform.tech < 1) problems.push(`platform ${platform.id}: tech must be >= 1`)
     if (platform.installBase <= 0) problems.push(`platform ${platform.id}: installBase must be > 0`)
+  }
+
+  for (const id of [...c.research.start.topics, ...c.research.start.genres]) {
+    if (!genreIds.includes(id) && !c.topics.some((topic) => topic.id === id)) {
+      problems.push(`research start references unknown id: ${id}`)
+    }
+  }
+  if (c.research.start.techLevel < 1) problems.push('research start techLevel must be >= 1')
+
+  problems.push(...findDuplicates(c.research.nodes.map((node) => node.id)).map((id) => `duplicate research node id: ${id}`))
+
+  const nodeIds = new Set(c.research.nodes.map((node) => node.id))
+  for (const node of c.research.nodes) {
+    if (node.kind === 'topic' && (!node.target || !c.topics.some((topic) => topic.id === node.target))) {
+      problems.push(`research ${node.id}: unknown topic target ${node.target}`)
+    }
+    if (node.kind === 'genre' && (!node.target || !genreIds.includes(node.target))) {
+      problems.push(`research ${node.id}: unknown genre target ${node.target}`)
+    }
+    if (node.kind === 'tech' && (node.level === undefined || node.level < 2)) {
+      problems.push(`research ${node.id}: tech node needs a level >= 2`)
+    }
+    if (node.costRp < 0 || node.costCash < 0) problems.push(`research ${node.id}: costs must not be negative`)
+    if (node.weeks < 1) problems.push(`research ${node.id}: weeks must be >= 1`)
+    for (const required of node.requires ?? []) {
+      if (!nodeIds.has(required)) problems.push(`research ${node.id}: unknown requirement ${required}`)
+      if (required === node.id) problems.push(`research ${node.id}: cannot require itself`)
+    }
+  }
+
+  for (const genre of c.genres) {
+    if (c.research.start.genres.includes(genre.id)) continue
+    if (!c.research.nodes.some((node) => node.kind === 'genre' && node.target === genre.id)) {
+      problems.push(`genre ${genre.id} has no research node and is not a starting genre`)
+    }
+  }
+  for (const topic of c.topics) {
+    if (c.research.start.topics.includes(topic.id)) continue
+    if (!c.research.nodes.some((node) => node.kind === 'topic' && node.target === topic.id)) {
+      problems.push(`topic ${topic.id} has no research node and is not a starting topic`)
+    }
   }
 
   const categoryWeightSum = Object.values(c.balance.categoryWeights).reduce((a, b) => a + b, 0)

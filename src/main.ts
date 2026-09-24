@@ -10,6 +10,7 @@ import { LeaderboardScene } from './scenes/LeaderboardScene'
 import { OfficeScene } from './scenes/OfficeScene'
 import { ProjectSetupScene } from './scenes/ProjectSetupScene'
 import { ReportScene } from './scenes/ReportScene'
+import { ResearchScene } from './scenes/ResearchScene'
 import { ReviewScene } from './scenes/ReviewScene'
 import { SettingsScene } from './scenes/SettingsScene'
 
@@ -33,6 +34,7 @@ new Phaser.Game({
     ProjectSetupScene,
     ReviewScene,
     ReportScene,
+    ResearchScene,
     GameOverScene,
     LeaderboardScene,
     DevSandboxScene,

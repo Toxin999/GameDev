@@ -9,6 +9,7 @@ export interface ScoreInput {
   platform: Platform
   balance: Balance
   rng: Rng
+  techLevel?: number
 }
 
 export interface ScoreBreakdown {
@@ -44,21 +45,22 @@ export function platformFitFor(platform: Platform, genreId: string, balance: Bal
   return normalize(affinity, balance.affinityFloor, balance.affinitySpan)
 }
 
-export function techFitFor(project: GameProject, platform: Platform, balance: Balance): number {
+export function techFitFor(project: GameProject, platform: Platform, balance: Balance, techLevel = 1): number {
   const enginePoints = project.stagePoints.engine
   const required = platform.tech * balance.enginePointsPerTechLevel
   const ratio = enginePoints / required
-  if (ratio < 1) return clamp01(ratio)
-  return Math.max(0.6, 1 - (ratio - 1) * balance.overTechPenalty)
+  const base = ratio < 1 ? clamp01(ratio) : Math.max(0.6, 1 - (ratio - 1) * balance.overTechPenalty)
+  const bonus = Math.max(0, techLevel - 1) * balance.techFitBonusPerLevel
+  return clamp01(base + bonus)
 }
 
 export function scoreProject(input: ScoreInput): ScoreBreakdown {
-  const { project, topic, genre, platform, balance, rng } = input
+  const { project, topic, genre, platform, balance, rng, techLevel = 1 } = input
 
   const totalUnits = STAGE_IDS.reduce((sum, stage) => sum + project.sliders[stage], 0)
   const topicFit = topicFitFor(topic, project.genreId, balance)
   const platformFit = platformFitFor(platform, project.genreId, balance)
-  const techFit = techFitFor(project, platform, balance)
+  const techFit = techFitFor(project, platform, balance, techLevel)
 
   const sliderFit = {} as Record<ReviewCategory, number>
   for (const stage of STAGE_IDS) {

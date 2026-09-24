@@ -51,6 +51,9 @@
     "fanConversion": 0.02,
     "fanFactorDivisor": 20000,
     "revenueValuation": 0.5,
-    "winValue": 500000
+    "winValue": 500000,
+    "rpBase": 4,
+    "rpPerPoint": 0.08,
+    "techFitBonusPerLevel": 0.04
   }
 }

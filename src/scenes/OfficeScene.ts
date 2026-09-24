@@ -32,13 +32,6 @@ import { COLOR, FONT_SIZE, centerText, textStyle } from '../ui/theme'
 const TICK_MS = 1100
 const CHAR_INDEX = 0
 const FLOOR_BOTTOM = ROOM.y + ROOM.rows * TILE
-const PHASE_LABELS: Record<string, string> = {
-  idle: 'IDLE',
-  dev: 'DEV',
-  release: 'READY',
-  sales: 'SALES',
-  over: 'DONE',
-}
 const ACTION_LABELS: Record<string, string> = {
   idle: 'NEW PROJECT',
   dev: 'DEVELOPING',
@@ -76,9 +69,9 @@ export class OfficeScene extends Phaser.Scene {
   private moneyText!: Phaser.GameObjects.Text
   private dateText!: Phaser.GameObjects.Text
   private fansText!: Phaser.GameObjects.Text
-  private phaseText!: Phaser.GameObjects.Text
   private actionButton!: Button
   private reportButton!: Button
+  private researchButton!: Button
   private progressBar!: ProgressBar
   private progressLabel!: Phaser.GameObjects.Text
   private stageDots!: Phaser.GameObjects.Graphics
@@ -256,13 +249,22 @@ export class OfficeScene extends Phaser.Scene {
     hud.strokeRect(0, 0, GAME_WIDTH, 64)
 
     this.add.text(24, 22, getStudioName(), textStyle(FONT_SIZE.sm, COLOR.accentCss, true)).setDepth(501)
-    this.moneyText = this.add.text(260, 22, '', textStyle(FONT_SIZE.sm, COLOR.moneyCss)).setDepth(501)
-    this.dateText = this.add.text(400, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
-    this.fansText = this.add.text(570, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
-    this.phaseText = this.add.text(710, 22, '', textStyle(FONT_SIZE.sm, COLOR.textDim)).setDepth(501)
+    this.moneyText = this.add.text(230, 22, '', textStyle(FONT_SIZE.sm, COLOR.moneyCss)).setDepth(501)
+    this.dateText = this.add.text(430, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
+    this.fansText = this.add.text(600, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
+
+    this.researchButton = new Button(this, {
+      x: 790,
+      y: 32,
+      width: 160,
+      height: 40,
+      label: 'RESEARCH',
+      onClick: () => this.openOverlay('Research'),
+    })
+    this.researchButton.setDepth(501)
 
     this.reportButton = new Button(this, {
-      x: 890,
+      x: 935,
       y: 32,
       width: 120,
       height: 40,
@@ -272,9 +274,9 @@ export class OfficeScene extends Phaser.Scene {
     this.reportButton.setDepth(501)
 
     this.actionButton = new Button(this, {
-      x: 1050,
+      x: 1075,
       y: 32,
-      width: 190,
+      width: 160,
       height: 40,
       label: 'NEW PROJECT',
       style: 'primary',
@@ -283,9 +285,9 @@ export class OfficeScene extends Phaser.Scene {
     this.actionButton.setDepth(501)
 
     new Button(this, {
-      x: 1190,
+      x: 1230,
       y: 32,
-      width: 130,
+      width: 90,
       height: 40,
       label: 'MENU',
       onClick: () => void this.backToMenu(),
@@ -293,8 +295,10 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   private clock(): void {
-    const phase = this.sim.state.phase
-    if (phase !== 'dev' && phase !== 'sales') return
+    const state = this.sim.state
+    const researching = state.research !== null
+    if (state.phase === 'over') return
+    if (state.phase !== 'dev' && state.phase !== 'sales' && !researching) return
 
     const events = tick(this.sim)
     saveSession()
@@ -302,7 +306,15 @@ export class OfficeScene extends Phaser.Scene {
 
     const salesWeek = events.find((event) => event.type === 'sales-week')
     const salesEnd = events.find((event) => event.type === 'sales-end')
+    const researchDone = events.find((event) => event.type === 'research-complete')
+    const researchGain = events.find((event) => event.type === 'research-points')
 
+    if (researchGain && researchGain.type === 'research-points') this.toast(`+${researchGain.amount} RP`)
+    if (researchDone && researchDone.type === 'research-complete') {
+      const node = this.sim.content.research.nodes.find((entry) => entry.id === researchDone.nodeId)
+      playSfx(this, 'success')
+      this.toast(`${(node?.name ?? researchDone.nodeId).toUpperCase()} RESEARCHED`)
+    }
     if (salesWeek && salesWeek.type === 'sales-week' && salesWeek.revenue > 0) this.floatMoney(salesWeek.revenue)
     if (events.some((event) => event.type === 'dev-complete')) this.onDevComplete()
     if (salesEnd && salesEnd.type === 'sales-end') {
@@ -366,10 +378,9 @@ export class OfficeScene extends Phaser.Scene {
     const date = dateOf(this.sim)
     const pad = (value: number) => String(value).padStart(2, '0')
 
-    this.moneyText.setText(`$${Math.round(state.cash).toLocaleString('en-US')}`)
+    this.moneyText.setText(`$${Math.round(state.cash).toLocaleString('en-US')} · RP ${state.researchPoints}`)
     this.dateText.setText(`${date.year} M${pad(date.month)} W${pad(date.week)}`)
-    this.fansText.setText(`FANS ${state.fans.toLocaleString('en-US')}`)
-    this.phaseText.setText(state.outcome ? state.outcome.toUpperCase() : PHASE_LABELS[state.phase]!)
+    this.fansText.setText(`F ${state.fans.toLocaleString('en-US')}`)
 
     const project = state.project
     const showProgress = Boolean(project) && (state.phase === 'dev' || state.phase === 'release')
@@ -386,6 +397,9 @@ export class OfficeScene extends Phaser.Scene {
     this.actionButton.setLabel(ACTION_LABELS[state.phase] ?? 'NEW PROJECT')
     this.actionButton.setEnabled(state.phase !== 'dev' && state.phase !== 'sales')
     this.reportButton.setEnabled(state.released.length > 0)
+    const task = state.research
+    this.researchButton.setLabel(task ? `R&D ${task.weeksLeft}W` : 'RESEARCH')
+    this.researchButton.setEnabled(state.phase !== 'over')
   }
 
   private action(): void {

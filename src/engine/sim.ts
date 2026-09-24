@@ -1,4 +1,5 @@
 import { weeklyRevenue, weeklySales } from './market'
+import { advanceResearch, availableGenres, availableTopics, researchPointsFor } from './research'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import { computeReview } from './score'
@@ -72,6 +73,10 @@ export function createSim(options: {
       currentReview: null,
       sales: null,
       released: [],
+      researchPoints: 0,
+      techLevel: content.research.start.techLevel,
+      unlocked: [],
+      research: null,
     },
   }
 }
@@ -79,8 +84,24 @@ export function createSim(options: {
 export function availablePlatforms(sim: Sim): Platform[] {
   const year = dateOf(sim).year
   return sim.content.platforms
-    .filter((p) => year >= p.releaseYear && year < p.retireYear)
+    .filter((platform) => year >= platform.releaseYear && year < platform.retireYear)
+    .filter((platform) => platform.tech <= sim.state.techLevel)
     .sort((a, b) => a.releaseYear - b.releaseYear || a.name.localeCompare(b.name))
+}
+
+export function lockedPlatformCount(sim: Sim): number {
+  const year = dateOf(sim).year
+  return sim.content.platforms.filter(
+    (platform) => year >= platform.releaseYear && year < platform.retireYear && platform.tech > sim.state.techLevel,
+  ).length
+}
+
+export function selectableTopics(sim: Sim): Topic[] {
+  return availableTopics(sim.content, sim.state)
+}
+
+export function selectableGenres(sim: Sim): Genre[] {
+  return availableGenres(sim.content, sim.state)
 }
 
 export function projectCost(content: Content, platform: Platform, sliders: Sliders): number {
@@ -114,6 +135,9 @@ export function startProject(sim: Sim, input: StartProjectInput): void {
   const year = dateOf(sim).year
   if (year < platform.releaseYear || year >= platform.retireYear) {
     throw new Error(`platform ${platform.id} is not available in ${year}`)
+  }
+  if (platform.tech > state.techLevel) {
+    throw new Error(`platform ${platform.id} needs engine tech level ${platform.tech}`)
   }
 
   for (const stage of STAGE_IDS) {
@@ -176,6 +200,7 @@ function completeDev(sim: Sim, events: SimEvent[]): void {
     platform: findPlatform(content, project.platformId),
     balance: content.balance,
     rng,
+    techLevel: state.techLevel,
   })
   state.currentReview = review
   state.phase = 'release'
@@ -267,6 +292,7 @@ export function tick(sim: Sim): SimEvent[] {
   if (sim.state.phase === 'dev') advanceDev(sim, events)
   else if (sim.state.phase === 'sales') advanceSales(sim, events)
 
+  advanceResearch(sim, events)
   checkOutcome(sim, events)
   return events
 }
@@ -294,6 +320,7 @@ export function fixBug(sim: Sim): SimEvent[] {
       platform: findPlatform(content, state.project.platformId),
       balance: content.balance,
       rng: sim.rng,
+      techLevel: state.techLevel,
     })
     state.currentReview = review
     events.push({ type: 'review', review })
@@ -303,7 +330,7 @@ export function fixBug(sim: Sim): SimEvent[] {
   return events
 }
 
-export function releaseGame(sim: Sim): void {
+export function releaseGame(sim: Sim): SimEvent[] {
   const { state, content } = sim
   const { balance } = content
   const project = state.project
@@ -334,6 +361,11 @@ export function releaseGame(sim: Sim): void {
     weeklyUnits,
   })
   state.phase = 'sales'
+
+  const points = STAGE_IDS.reduce((sum, stage) => sum + project.stagePoints[stage], 0)
+  const reward = researchPointsFor(content, points, review.overall)
+  state.researchPoints += reward
+  return [{ type: 'research-points', amount: reward, total: state.researchPoints }]
 }
 
 export function projectProgress(project: GameProject): number {

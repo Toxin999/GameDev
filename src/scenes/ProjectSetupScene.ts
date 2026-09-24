@@ -9,7 +9,10 @@ import {
   findPlatform,
   findTopic,
   projectCost,
+  lockedPlatformCount,
   projectWeeks,
+  selectableGenres,
+  selectableTopics,
   startProject,
   totalUnits,
 } from '../engine/sim'
@@ -63,8 +66,8 @@ export class ProjectSetupScene extends Phaser.Scene {
     this.sim = getSession() ?? startNewSession('setup')
     this.page = 'pick'
     this.sliders = emptySliders()
-    this.topicId = this.sim.content.topics[0]?.id ?? ''
-    this.genreId = this.sim.content.genres[0]?.id ?? ''
+    this.topicId = selectableTopics(this.sim)[0]?.id ?? ''
+    this.genreId = selectableGenres(this.sim)[0]?.id ?? ''
     const platforms = availablePlatforms(this.sim)
     this.platformId = platforms[platforms.length - 1]?.id ?? ''
 
@@ -102,11 +105,14 @@ export class ProjectSetupScene extends Phaser.Scene {
   private buildPickPage(): void {
     addOverlayHeader(this, 'NEW PROJECT — STEP 1 OF 2')
 
-    const topics = this.sim.content.topics
-    const genres = this.sim.content.genres
+    const topics = selectableTopics(this.sim)
+    const genres = selectableGenres(this.sim)
     const platforms = availablePlatforms(this.sim)
+    const lockedTopics = this.sim.content.topics.length - topics.length
+    const lockedGenres = this.sim.content.genres.length - genres.length
+    const lockedPlatforms = lockedPlatformCount(this.sim)
 
-    this.sectionLabel(70, 132, 'TOPIC')
+    this.sectionLabel(70, 132, lockedTopics > 0 ? `TOPIC · ${lockedTopics} LOCKED` : 'TOPIC')
     const topicList = new ScrollList<Topic>(this, {
       x: 240,
       y: 430,
@@ -122,7 +128,7 @@ export class ProjectSetupScene extends Phaser.Scene {
     })
     this.track(topicList)
 
-    this.sectionLabel(450, 132, 'GENRE')
+    this.sectionLabel(450, 132, lockedGenres > 0 ? `GENRE · ${lockedGenres} LOCKED` : 'GENRE')
     const genreList = new ScrollList<Genre>(this, {
       x: 540,
       y: 350,
@@ -138,7 +144,7 @@ export class ProjectSetupScene extends Phaser.Scene {
     })
     this.track(genreList)
 
-    this.sectionLabel(690, 132, `PLATFORM — ${dateOf(this.sim).year}`)
+    this.sectionLabel(690, 132, `PLATFORM — ${dateOf(this.sim).year}${lockedPlatforms > 0 ? ` · ${lockedPlatforms} NEED TECH` : ''}`)
     const platformList = new ScrollList<Platform>(this, {
       x: 820,
       y: 430,
@@ -164,7 +170,15 @@ export class ProjectSetupScene extends Phaser.Scene {
       this.summaryLines.push(line)
     }
 
-    const hint = this.add.text(contentX, Math.round(summary.top + 340), 'FIT: *** GREAT\n     **  GOOD\n     *   WEAK\n     -   BAD', {
+    const lockedHint = this.add.text(
+      contentX,
+      Math.round(summary.top + 300),
+      `LOCKED: ${lockedTopics} TOPICS · ${lockedGenres} GENRES · ${lockedPlatforms} PLATFORMS\nOPEN RESEARCH IN THE STUDIO TO UNLOCK`,
+      { ...textStyle(10, COLOR.textDim), lineSpacing: 6 },
+    )
+    summary.add(lockedHint)
+
+    const hint = this.add.text(contentX, Math.round(summary.top + 360), 'FIT: *** GREAT\n     **  GOOD\n     *   WEAK\n     -   BAD', {
       ...textStyle(10, COLOR.textDim),
       lineSpacing: 6,
     })

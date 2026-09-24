@@ -21,7 +21,10 @@ Inspired by the genre, not a copy: all content, balance values and art are origi
    helps, and high tech platforms need engine time.
 4. Watch the clock: the dev types, bugs pile up, and a review lands when the project is done.
 5. Fix bugs for $500 and a week each, then ship. Sales run for 12 weeks, then you get a report.
-6. Grow the studio value to $500,000 without running out of cash.
+6. Every release pays **research points** (more points for bigger, better reviewed games).
+7. `RESEARCH` spends points, cash and weeks to unlock topics, genres and engine tech levels.
+   Higher engine tech unlocks newer platforms, and it runs in parallel with development.
+8. Grow the studio value to $500,000 without running out of cash.
 
 Mouse or touch both work; `T` ticks a week and `R` releases in short bursts (dev convenience).
 `?scene=Office|DevSandbox|AssetInspector|ProjectSetup|Review|Report|GameOver|Leaderboard` jumps
@@ -34,6 +37,7 @@ straight to a scene when developing.
 - Audio: Web Audio starts after the first click, so the first click of a session may be silent.
 - Saves live in localStorage and are backed up to the cloud; without a network the game is fully
   playable and syncs later.
+- Saves made before the research update keep every topic, genre and tech level unlocked.
 
 ## Development
 
@@ -92,6 +96,7 @@ trust-based apart from sanity caps.
 | M5 | Sales, money, win/lose, local save |
 | M6 | Cloud saves + leaderboard (Workers + D1) |
 | M7 | Polish, balance, audio, mobile, deploy |
+| M8 | Research system (unlock topics, genres and engine tech levels) |
 
-Next ideas: research system (unlock topics and engine tech levels), staff hiring, cross-device sync
-codes, marketing campaigns and post-release patches.
+Next ideas: staff hiring and studio expansion, cross-device sync codes, marketing campaigns,
+post-release patches and a small-screen layout.
