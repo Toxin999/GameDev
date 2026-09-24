@@ -1,32 +1,28 @@
 import Phaser from 'phaser'
+import { GAME_HEIGHT, GAME_WIDTH } from '../config'
+import { COLOR, FONT_FAMILY, FONT_SIZE, centerText, textStyle } from '../ui/theme'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot')
   }
 
-  create(): void {
-    const { width, height } = this.scale
+  async create(): Promise<void> {
+    this.cameras.main.setBackgroundColor(COLOR.bg)
+    const label = this.add.text(0, 0, 'loading', textStyle(FONT_SIZE.sm, COLOR.textDim))
+    centerText(label, GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
-    this.add
-      .text(width / 2, height / 2 - 40, 'INDIE STUDIO SIM', {
-        fontFamily: 'monospace',
-        fontSize: '48px',
-        color: '#f4d35e',
-      })
-      .setOrigin(0.5)
+    try {
+      await Promise.all([
+        document.fonts.load(`16px "${FONT_FAMILY}"`),
+        document.fonts.load(`bold 16px "${FONT_FAMILY}"`),
+      ])
+    } catch {
+      label.setText('font unavailable')
+    }
 
-    this.add
-      .text(
-        width / 2,
-        height / 2 + 24,
-        `M0 scaffold ok — Phaser ${Phaser.VERSION} (${this.game.renderer.type === Phaser.WEBGL ? 'WebGL' : 'Canvas'})`,
-        {
-          fontFamily: 'monospace',
-          fontSize: '18px',
-          color: '#8aa1b1',
-        },
-      )
-      .setOrigin(0.5)
+    const requested = new URLSearchParams(window.location.search).get('scene')
+    const target = requested && this.scene.manager.keys[requested] ? requested : 'MainMenu'
+    this.scene.start(target)
   }
 }

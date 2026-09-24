@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { content } from '../../src/data/content'
+import { allocateSliders } from '../../src/game/allocate'
 import {
   availablePlatforms,
   companyValue,
@@ -21,24 +22,7 @@ function clone(): Content {
 }
 
 function allocate(content_: Content, genreId: string, budget: number): Sliders {
-  const genre = content_.genres.find((g) => g.id === genreId)!
-  const raw = STAGE_IDS.map((stage) => ({ stage, exact: genre.ideal[stage] * budget }))
-  const sliders = emptySliders()
-  let assigned = 0
-  for (const { stage, exact } of raw) {
-    const units = Math.floor(exact)
-    sliders[stage] = units
-    assigned += units
-  }
-  const byRemainder = [...raw].sort((a, b) => (b.exact % 1) - (a.exact % 1))
-  let index = 0
-  while (assigned < budget) {
-    const stage = byRemainder[index % byRemainder.length]!.stage
-    sliders[stage] += 1
-    assigned += 1
-    index += 1
-  }
-  return sliders
+  return allocateSliders(content_, genreId, budget)
 }
 
 function runUntil(sim: ReturnType<typeof createSim>, phases: string[], limit: number): SimEvent[] {

@@ -1,8 +1,10 @@
 import Phaser from 'phaser'
+import './style.css'
+import { GAME_HEIGHT, GAME_WIDTH } from './config'
 import { BootScene } from './scenes/BootScene'
-
-export const GAME_WIDTH = 1280
-export const GAME_HEIGHT = 720
+import { DevSandboxScene } from './scenes/DevSandboxScene'
+import { MainMenuScene } from './scenes/MainMenuScene'
+import { SettingsScene } from './scenes/SettingsScene'
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -15,5 +17,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene],
+  scene: [BootScene, MainMenuScene, SettingsScene, DevSandboxScene],
 })
