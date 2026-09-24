@@ -7,6 +7,12 @@ export class BootScene extends Phaser.Scene {
     super('Boot')
   }
 
+  preload(): void {
+    this.load.spritesheet('chars', 'assets/kenney/rpg-urban-tilemap.png', { frameWidth: 16, frameHeight: 16 })
+    this.load.spritesheet('furniture', 'assets/indoor/furniture.png', { frameWidth: 16, frameHeight: 16 })
+    this.load.spritesheet('walls', 'assets/indoor/walls_floor_doors.png', { frameWidth: 16, frameHeight: 16 })
+  }
+
   async create(): Promise<void> {
     this.cameras.main.setBackgroundColor(COLOR.bg)
     const label = this.add.text(0, 0, 'loading', textStyle(FONT_SIZE.sm, COLOR.textDim))

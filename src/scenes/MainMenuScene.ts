@@ -1,9 +1,8 @@
 import Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../config'
-import { hasSave } from '../game/session'
+import { hasSession, hasSave, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import type { ButtonStyle } from '../ui/Button'
-import { openModal } from '../ui/Modal'
 import { Panel } from '../ui/Panel'
 import { COLOR, FONT_SIZE, centerText, textStyle } from '../ui/theme'
 
@@ -41,7 +40,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     const definitions: MenuDefinition[] = [
       { label: 'NEW GAME', style: 'primary', enabled: true, onClick: () => this.startNewGame() },
-      { label: 'CONTINUE', style: 'default', enabled: hasSave(), onClick: () => this.scene.start('DevSandbox') },
+      { label: 'CONTINUE', style: 'default', enabled: hasSave() || hasSession(), onClick: () => this.scene.start('Office') },
       { label: 'LEADERBOARD', style: 'default', enabled: false, onClick: () => undefined },
       { label: 'SETTINGS', style: 'default', enabled: true, onClick: () => this.openSettings() },
     ]
@@ -91,15 +90,8 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private startNewGame(): void {
-    if (import.meta.env.DEV) {
-      this.scene.start('DevSandbox')
-      return
-    }
-    void openModal(this, {
-      title: 'COMING SOON',
-      message: 'The full studio flow arrives in milestone M4. Run a development build to try the engine sandbox.',
-      buttons: [{ label: 'OK', value: 'ok', style: 'primary' }],
-    })
+    startNewSession()
+    this.scene.start('Office')
   }
 
   private openSettings(): void {

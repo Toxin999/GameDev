@@ -56,6 +56,10 @@ export function hasSave(): boolean {
 
 let session: Sim | null = null
 
+export function hasSession(): boolean {
+  return session !== null
+}
+
 export function getSession(): Sim | null {
   return session
 }
