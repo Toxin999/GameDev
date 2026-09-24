@@ -10,6 +10,7 @@ import {
   fixBug,
   projectCost,
   projectProgress,
+  projectWeeks,
   releaseGame,
   startProject,
   tick,
@@ -110,21 +111,31 @@ describe('sim', () => {
   })
 
   it('lets the studio fix bugs before release at the cost of a week', () => {
-    const sim = createSim({ content: clone(), seed: 'bugs' })
+    const c = clone()
+    c.balance.variance = 0
+    const sim = createSim({ content: c, seed: 'bugs' })
     startProject(sim, { topicId: 'space', genreId: 'rpg', platformId: 'home-pc', sliders: { engine: 2, gameplay: 4, story: 2, graphics: 2, sound: 2 } })
     runUntil(sim, ['release'], 100)
     sim.state.project!.bugs = 3
     const cashBefore = sim.state.cash
     const weekBefore = sim.state.week
+    const reviewBefore = sim.state.currentReview!.overall
 
     fixBug(sim)
     expect(sim.state.project!.bugs).toBe(2)
     expect(sim.state.week).toBe(weekBefore + 1)
-    expect(sim.state.cash).toBe(cashBefore - content.balance.fixBugCost - content.balance.weeklyCost)
+    expect(sim.state.cash).toBe(cashBefore - c.balance.fixBugCost - c.balance.weeklyCost)
+    expect(sim.state.currentReview!.overall).toBeGreaterThan(reviewBefore)
 
     expect(() => fixBug(sim)).not.toThrow()
     expect(() => fixBug(sim)).not.toThrow()
     expect(() => fixBug(sim)).toThrow(/no bugs/)
+  })
+
+  it('estimates project length from the slider budget', () => {
+    const c = clone()
+    expect(projectWeeks(c, { engine: 2, gameplay: 4, story: 2, graphics: 2, sound: 2 })).toBe(12)
+    expect(projectWeeks(c, emptySliders())).toBe(1)
   })
 
   it('sells a released game over several weeks then returns to idle', () => {

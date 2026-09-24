@@ -35,7 +35,7 @@ export class Slider extends Phaser.GameObjects.Container {
     this.knob = scene.add.graphics()
     this.add([this.track, this.knob])
 
-    const top = -26
+    const top = -40
     if (config.label) {
       this.labelText = scene.add.text(Math.round(-this.boxWidth / 2), top, config.label, textStyle(FONT_SIZE.sm, COLOR.textDim))
       this.add(this.labelText)
@@ -118,11 +118,11 @@ export class Slider extends Phaser.GameObjects.Container {
 
     this.knob.clear()
     this.knob.fillStyle(this.dragging ? COLOR.accent : COLOR.textFill, 1)
-    this.knob.fillRect(knobX - 6, -14, 12, 28)
+    this.knob.fillRect(knobX - 6, -11, 12, 22)
     this.knob.lineStyle(2, COLOR.accent, 1)
-    this.knob.strokeRect(knobX - 6, -14, 12, 28)
+    this.knob.strokeRect(knobX - 6, -11, 12, 22)
 
     this.valueText.setText(this.formatValue(this.value))
-    rightAlignText(this.valueText, halfW, -26)
+    rightAlignText(this.valueText, halfW, -40)
   }
 }

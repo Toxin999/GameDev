@@ -1,8 +1,8 @@
 import Phaser from 'phaser'
 import { GAME_WIDTH } from '../config'
 import type { Sim } from '../engine/sim'
-import { availablePlatforms, dateOf, fixBug, projectProgress, releaseGame, startProject, tick } from '../engine/sim'
-import { allocateSliders } from '../game/allocate'
+import { dateOf, projectProgress, releaseGame, tick } from '../engine/sim'
+import { STAGE_IDS } from '../engine/types'
 import {
   CHAR_COLUMNS,
   CHAR_DIR_COLUMN,
@@ -20,6 +20,7 @@ import {
   WAYPOINTS,
 } from '../game/officeLayout'
 import type { Direction } from '../game/officeLayout'
+import type { GameProject } from '../engine/types'
 import { getSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import { openModal } from '../ui/Modal'
@@ -77,6 +78,7 @@ export class OfficeScene extends Phaser.Scene {
   private actionButton!: Button
   private progressBar!: ProgressBar
   private progressLabel!: Phaser.GameObjects.Text
+  private stageDots!: Phaser.GameObjects.Graphics
   private lastPhase = ''
 
   constructor() {
@@ -97,6 +99,14 @@ export class OfficeScene extends Phaser.Scene {
     this.createHud()
 
     this.time.addEvent({ delay: TICK_MS, loop: true, callback: () => this.clock() })
+
+    const onResume = () => {
+      this.refresh()
+      this.enterPhase(this.sim.state.phase)
+    }
+    this.events.on(Phaser.Scenes.Events.RESUME, onResume)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, onResume))
+
     this.refresh()
     this.enterPhase(this.sim.state.phase)
   }
@@ -213,8 +223,24 @@ export class OfficeScene extends Phaser.Scene {
     this.progressBar = new ProgressBar(this, { x: DESK_X + TILE / 2, y: DESK_Y - 82, width: 240, height: 16 })
     this.progressBar.setDepth(400)
     this.progressLabel = this.add.text(0, 0, '', textStyle(FONT_SIZE.sm, COLOR.textDim)).setDepth(400)
+    this.stageDots = this.add.graphics().setDepth(400)
     this.progressBar.setVisible(false)
     this.progressLabel.setVisible(false)
+    this.stageDots.setVisible(false)
+  }
+
+  private drawStageDots(project: GameProject): void {
+    const count = STAGE_IDS.length
+    const spacing = 22
+    const startX = DESK_X + TILE / 2 - ((count - 1) * spacing) / 2
+    const y = DESK_Y - 104
+    this.stageDots.clear()
+    STAGE_IDS.forEach((stage, index) => {
+      const done = project.spent[stage] >= project.stagePoints[stage]
+      const current = project.stage === stage
+      this.stageDots.fillStyle(done ? COLOR.good : current ? COLOR.accent : COLOR.border, 1)
+      this.stageDots.fillRect(Math.round(startX + index * spacing - 8), y, 16, 8)
+    })
   }
 
   private createHud(): void {
@@ -330,10 +356,12 @@ export class OfficeScene extends Phaser.Scene {
     const showProgress = Boolean(project) && (state.phase === 'dev' || state.phase === 'release')
     this.progressBar.setVisible(showProgress)
     this.progressLabel.setVisible(showProgress)
+    this.stageDots.setVisible(showProgress)
     if (project) {
       this.progressBar.setValue(projectProgress(project))
       this.progressLabel.setText(`${project.stage.toUpperCase()} ${project.spent[project.stage]}/${project.stagePoints[project.stage]}`)
-      centerText(this.progressLabel, DESK_X + TILE / 2, DESK_Y - 106)
+      centerText(this.progressLabel, DESK_X + TILE / 2, DESK_Y - 130)
+      this.drawStageDots(project)
     }
 
     this.actionButton.setLabel(ACTION_LABELS[state.phase] ?? 'NEW PROJECT')
@@ -343,7 +371,7 @@ export class OfficeScene extends Phaser.Scene {
   private action(): void {
     const state = this.sim.state
     if (state.phase === 'idle') {
-      this.startDefaultProject()
+      this.openSetup()
       return
     }
     if (state.phase === 'release') {
@@ -359,69 +387,17 @@ export class OfficeScene extends Phaser.Scene {
     }
   }
 
-  private startDefaultProject(): void {
-    const content = this.sim.content
-    const balance = content.balance
-    const genre = content.genres.find((entry) => entry.id === 'rpg') ?? content.genres[0]!
-    const topic = content.topics.find((entry) => entry.id === 'fantasy') ?? content.topics[0]!
-    const platforms = availablePlatforms(this.sim)
-    const platform = platforms[platforms.length - 1]
-
-    if (!platform) {
-      this.toast('NO PLATFORM AVAILABLE')
-      return
-    }
-
-    try {
-      startProject(this.sim, {
-        topicId: topic.id,
-        genreId: genre.id,
-        platformId: platform.id,
-        sliders: allocateSliders(content, genre.id, balance.sliderBudget),
-      })
-      this.toast(`${topic.name.toUpperCase()} ${genre.name.toUpperCase()} ON ${platform.name.toUpperCase()}`)
-    } catch (error) {
-      this.toast((error as Error).message.toUpperCase())
-    }
-
-    this.refresh()
-    this.enterPhase(this.sim.state.phase)
+  private openSetup(): void {
+    this.scene.launch('ProjectSetup')
+    this.scene.pause()
   }
 
   private onDevComplete(): void {
-    const review = this.sim.state.currentReview
-    const project = this.sim.state.project
-    if (!review || !project) return
+    if (!this.sim.state.currentReview) return
     this.enterPhase('release')
-
-    const summary = Object.entries(review.categories)
-      .map(([category, score]) => `${category.toUpperCase()} ${score.toFixed(1)}`)
-      .join('\n')
-
-    const buttons = project.bugs > 0
-      ? [
-          { label: `FIX BUGS (${project.bugs})`, value: 'fix' },
-          { label: 'SHIP IT', value: 'ship', style: 'primary' as const },
-        ]
-      : [{ label: 'SHIP IT', value: 'ship', style: 'primary' as const }]
-
-    void openModal(this, {
-      title: `REVIEW ${review.overall.toFixed(1)} / 10`,
-      message: summary,
-      buttons,
-    }).then((value) => {
-      if (value === 'fix') {
-        try {
-          fixBug(this.sim)
-        } catch {
-          this.refresh()
-        }
-        this.refresh()
-        if (this.sim.state.phase === 'release') this.onDevComplete()
-        return
-      }
-      this.action()
-    })
+    this.toast(`REVIEW ${this.sim.state.currentReview.overall.toFixed(1)} / 10`)
+    this.scene.launch('Review')
+    this.scene.pause()
   }
 
   private onGameOver(): void {
@@ -459,7 +435,7 @@ export class OfficeScene extends Phaser.Scene {
 
   private floatMoney(amount: number): void {
     const label = this.add.text(0, 0, `+$${amount.toLocaleString('en-US')}`, textStyle(FONT_SIZE.sm, COLOR.goodCss)).setDepth(600)
-    label.setPosition(340, 68)
+    label.setPosition(340, 92)
     this.tweens.add({ targets: label, y: label.y + 26, alpha: 0, duration: 1200, onComplete: () => label.destroy() })
   }
 }

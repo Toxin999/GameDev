@@ -159,6 +159,7 @@ export type SimEvent =
   | { type: 'dev-complete'; review: Review }
   | { type: 'bug'; bugs: number }
   | { type: 'bug-fixed'; bugs: number; cost: number }
+  | { type: 'review'; review: Review }
   | { type: 'sales-week'; units: number; revenue: number }
   | { type: 'sales-end'; game: ReleasedGame }
   | { type: 'game-over'; outcome: Outcome }

@@ -85,6 +85,11 @@ export function totalUnits(sliders: Sliders): number {
   return STAGE_IDS.reduce((sum, stage) => sum + Math.max(0, sliders[stage]), 0)
 }
 
+export function projectWeeks(content: Content, sliders: Sliders): number {
+  const points = totalUnits(sliders) * content.balance.pointsPerUnit
+  return Math.max(1, Math.ceil(points / content.balance.pointsPerWeek))
+}
+
 export function companyValue(sim: Sim): number {
   const lifetimeRevenue = sim.state.released.reduce((sum, game) => sum + game.revenue, 0)
   return Math.round(sim.state.cash + lifetimeRevenue * sim.content.balance.revenueValuation)
@@ -273,6 +278,20 @@ export function fixBug(sim: Sim): SimEvent[] {
   state.week += 1
   events.push({ type: 'bug-fixed', bugs: state.project.bugs, cost })
   events.push({ type: 'week', date: dateOf(sim) })
+
+  if (state.currentReview) {
+    const review = computeReview({
+      project: state.project,
+      topic: findTopic(content, state.project.topicId),
+      genre: findGenre(content, state.project.genreId),
+      platform: findPlatform(content, state.project.platformId),
+      balance: content.balance,
+      rng: sim.rng,
+    })
+    state.currentReview = review
+    events.push({ type: 'review', review })
+  }
+
   checkOutcome(sim, events)
   return events
 }

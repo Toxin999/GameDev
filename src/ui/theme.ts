@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { GAME_WIDTH } from '../config'
 
 export const COLOR = {
   bg: 0x14151f,
@@ -62,4 +63,14 @@ export function rightAlignText(text: Phaser.GameObjects.Text, xRight: number, y:
 
 export function rectHitArea(x: number, y: number, width: number, height: number): Phaser.Geom.Rectangle {
   return new Phaser.Geom.Rectangle(Math.round(x), Math.round(y), Math.round(width), Math.round(height))
+}
+
+export function addOverlayHeader(scene: Phaser.Scene, title: string): void {
+  const bar = scene.add.graphics()
+  bar.fillStyle(COLOR.panelDeep, 1)
+  bar.fillRect(0, 0, GAME_WIDTH, 96)
+  bar.lineStyle(2, COLOR.border, 1)
+  bar.strokeRect(0, 0, GAME_WIDTH, 96)
+  const text = scene.add.text(0, 0, title, textStyle(FONT_SIZE.lg, COLOR.accentCss, true))
+  centerText(text, GAME_WIDTH / 2, 48)
 }

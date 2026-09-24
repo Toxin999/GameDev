@@ -6,6 +6,8 @@ import { BootScene } from './scenes/BootScene'
 import { DevSandboxScene } from './scenes/DevSandboxScene'
 import { MainMenuScene } from './scenes/MainMenuScene'
 import { OfficeScene } from './scenes/OfficeScene'
+import { ProjectSetupScene } from './scenes/ProjectSetupScene'
+import { ReviewScene } from './scenes/ReviewScene'
 import { SettingsScene } from './scenes/SettingsScene'
 
 new Phaser.Game({
@@ -19,5 +21,14 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MainMenuScene, SettingsScene, OfficeScene, DevSandboxScene, AssetInspectorScene],
+  scene: [
+    BootScene,
+    MainMenuScene,
+    SettingsScene,
+    OfficeScene,
+    ProjectSetupScene,
+    ReviewScene,
+    DevSandboxScene,
+    AssetInspectorScene,
+  ],
 })
