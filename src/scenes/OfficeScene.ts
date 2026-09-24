@@ -21,7 +21,7 @@ import {
 } from '../game/officeLayout'
 import type { Direction } from '../game/officeLayout'
 import type { GameProject } from '../engine/types'
-import { getSession, startNewSession } from '../game/session'
+import { getSession, resumeSession, saveSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import { openModal } from '../ui/Modal'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -32,10 +32,10 @@ const CHAR_INDEX = 0
 const FLOOR_BOTTOM = ROOM.y + ROOM.rows * TILE
 const PHASE_LABELS: Record<string, string> = {
   idle: 'IDLE',
-  dev: 'DEVELOPING',
-  release: 'READY TO SHIP',
-  sales: 'ON SALE',
-  over: 'FINISHED',
+  dev: 'DEV',
+  release: 'READY',
+  sales: 'SALES',
+  over: 'DONE',
 }
 const ACTION_LABELS: Record<string, string> = {
   idle: 'NEW PROJECT',
@@ -76,6 +76,7 @@ export class OfficeScene extends Phaser.Scene {
   private fansText!: Phaser.GameObjects.Text
   private phaseText!: Phaser.GameObjects.Text
   private actionButton!: Button
+  private reportButton!: Button
   private progressBar!: ProgressBar
   private progressLabel!: Phaser.GameObjects.Text
   private stageDots!: Phaser.GameObjects.Graphics
@@ -86,7 +87,7 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.sim = getSession() ?? startNewSession('office')
+    this.sim = getSession() ?? resumeSession() ?? startNewSession('office')
     this.lastPhase = ''
     this.moveTween = null
     this.wanderTimer = null
@@ -101,6 +102,7 @@ export class OfficeScene extends Phaser.Scene {
     this.time.addEvent({ delay: TICK_MS, loop: true, callback: () => this.clock() })
 
     const onResume = () => {
+      saveSession()
       this.refresh()
       this.enterPhase(this.sim.state.phase)
     }
@@ -251,10 +253,20 @@ export class OfficeScene extends Phaser.Scene {
     hud.strokeRect(0, 0, GAME_WIDTH, 64)
 
     this.add.text(24, 22, 'GARAGE STUDIO', textStyle(FONT_SIZE.sm, COLOR.accentCss, true)).setDepth(501)
-    this.moneyText = this.add.text(300, 22, '', textStyle(FONT_SIZE.sm, COLOR.moneyCss)).setDepth(501)
-    this.dateText = this.add.text(520, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
-    this.fansText = this.add.text(700, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
-    this.phaseText = this.add.text(790, 22, '', textStyle(FONT_SIZE.sm, COLOR.textDim)).setDepth(501)
+    this.moneyText = this.add.text(260, 22, '', textStyle(FONT_SIZE.sm, COLOR.moneyCss)).setDepth(501)
+    this.dateText = this.add.text(400, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
+    this.fansText = this.add.text(570, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
+    this.phaseText = this.add.text(710, 22, '', textStyle(FONT_SIZE.sm, COLOR.textDim)).setDepth(501)
+
+    this.reportButton = new Button(this, {
+      x: 890,
+      y: 32,
+      width: 120,
+      height: 40,
+      label: 'REPORT',
+      onClick: () => this.openReport(),
+    })
+    this.reportButton.setDepth(501)
 
     this.actionButton = new Button(this, {
       x: 1050,
@@ -282,6 +294,7 @@ export class OfficeScene extends Phaser.Scene {
     if (phase !== 'dev' && phase !== 'sales') return
 
     const events = tick(this.sim)
+    saveSession()
     this.refresh()
 
     const salesWeek = events.find((event) => event.type === 'sales-week')
@@ -291,6 +304,7 @@ export class OfficeScene extends Phaser.Scene {
     if (events.some((event) => event.type === 'dev-complete')) this.onDevComplete()
     if (salesEnd && salesEnd.type === 'sales-end') {
       this.toast(`${salesEnd.game.unitsSold.toLocaleString('en-US')} UNITS  $${salesEnd.game.revenue.toLocaleString('en-US')}`)
+      this.openReport()
     }
     if (this.sim.state.phase === 'over') this.onGameOver()
   }
@@ -366,6 +380,7 @@ export class OfficeScene extends Phaser.Scene {
 
     this.actionButton.setLabel(ACTION_LABELS[state.phase] ?? 'NEW PROJECT')
     this.actionButton.setEnabled(state.phase !== 'dev' && state.phase !== 'sales')
+    this.reportButton.setEnabled(state.released.length > 0)
   }
 
   private action(): void {
@@ -392,6 +407,12 @@ export class OfficeScene extends Phaser.Scene {
     this.scene.pause()
   }
 
+  private openReport(): void {
+    if (this.sim.state.released.length === 0) return
+    this.scene.launch('Report', { index: this.sim.state.released.length - 1 })
+    this.scene.pause()
+  }
+
   private onDevComplete(): void {
     if (!this.sim.state.currentReview) return
     this.enterPhase('release')
@@ -401,17 +422,9 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   private onGameOver(): void {
-    const won = this.sim.state.outcome === 'win'
-    void openModal(this, {
-      title: won ? 'YOU WIN' : 'BANKRUPT',
-      message: won
-        ? 'Your studio value reached the goal. Keep going for a bigger score.'
-        : 'The studio ran out of cash. Start over with what you learned.',
-      buttons: [{ label: 'NEW GAME', value: 'new', style: 'primary' }],
-    }).then(() => {
-      startNewSession('office')
-      this.scene.restart()
-    })
+    saveSession()
+    this.scene.launch('GameOver')
+    this.scene.pause()
   }
 
   private backToMenu(): Promise<void> {

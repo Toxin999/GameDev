@@ -1,6 +1,7 @@
 import { content } from '../data/content'
 import { createSim } from '../engine/sim'
 import type { Sim } from '../engine/sim'
+import { SAVE_KEY, deleteSave, loadGame, saveGame } from './save'
 
 export interface Settings {
   masterVolume: number
@@ -8,7 +9,6 @@ export interface Settings {
 }
 
 const SETTINGS_KEY = 'iss.settings'
-const SAVE_KEY = 'iss.save'
 
 export const DEFAULT_SETTINGS: Settings = { masterVolume: 0.8, sfxVolume: 0.8 }
 
@@ -65,10 +65,22 @@ export function getSession(): Sim | null {
 }
 
 export function startNewSession(seed?: string | number): Sim {
+  deleteSave()
   session = createSim({ content, seed: seed ?? `studio-${Date.now()}` })
   return session
 }
 
+export function resumeSession(): Sim | null {
+  if (session) return session
+  session = loadGame()
+  return session
+}
+
+export function saveSession(): void {
+  if (session) saveGame(session)
+}
+
 export function clearSession(): void {
   session = null
+  deleteSave()
 }

@@ -5,8 +5,10 @@ import { AssetInspectorScene } from './scenes/AssetInspectorScene'
 import { BootScene } from './scenes/BootScene'
 import { DevSandboxScene } from './scenes/DevSandboxScene'
 import { MainMenuScene } from './scenes/MainMenuScene'
+import { GameOverScene } from './scenes/GameOverScene'
 import { OfficeScene } from './scenes/OfficeScene'
 import { ProjectSetupScene } from './scenes/ProjectSetupScene'
+import { ReportScene } from './scenes/ReportScene'
 import { ReviewScene } from './scenes/ReviewScene'
 import { SettingsScene } from './scenes/SettingsScene'
 
@@ -28,6 +30,8 @@ new Phaser.Game({
     OfficeScene,
     ProjectSetupScene,
     ReviewScene,
+    ReportScene,
+    GameOverScene,
     DevSandboxScene,
     AssetInspectorScene,
   ],

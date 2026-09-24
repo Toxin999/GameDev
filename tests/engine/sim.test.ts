@@ -156,6 +156,8 @@ describe('sim', () => {
     expect(game.unitsSold).toBeGreaterThan(0)
     expect(game.revenue).toBeGreaterThan(0)
     expect(game.weeksOnSale).toBe(c.balance.salesWeeks)
+    expect(game.weeklyUnits).toHaveLength(c.balance.salesWeeks)
+    expect(game.weeklyUnits[0]!).toBeGreaterThan(0)
     expect(sim.state.cash).toBeGreaterThan(cashBefore)
     expect(sim.state.fans).toBe(Math.round(game.unitsSold * c.balance.fanConversion))
     expect(events.filter((e) => e.type === 'sales-week')).toHaveLength(c.balance.salesWeeks)

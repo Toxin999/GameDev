@@ -1,8 +1,9 @@
 import Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../config'
-import { hasSession, hasSave, startNewSession } from '../game/session'
+import { getSession, hasSession, hasSave, resumeSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import type { ButtonStyle } from '../ui/Button'
+import { openModal } from '../ui/Modal'
 import { Panel } from '../ui/Panel'
 import { COLOR, FONT_SIZE, centerText, textStyle } from '../ui/theme'
 
@@ -40,7 +41,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     const definitions: MenuDefinition[] = [
       { label: 'NEW GAME', style: 'primary', enabled: true, onClick: () => this.startNewGame() },
-      { label: 'CONTINUE', style: 'default', enabled: hasSave() || hasSession(), onClick: () => this.scene.start('Office') },
+      { label: 'CONTINUE', style: 'default', enabled: hasSave() || hasSession(), onClick: () => this.continueGame() },
       { label: 'LEADERBOARD', style: 'default', enabled: false, onClick: () => undefined },
       { label: 'SETTINGS', style: 'default', enabled: true, onClick: () => this.openSettings() },
     ]
@@ -91,6 +92,19 @@ export class MainMenuScene extends Phaser.Scene {
 
   private startNewGame(): void {
     startNewSession()
+    this.scene.start('Office')
+  }
+
+  private continueGame(): void {
+    const sim = getSession() ?? resumeSession()
+    if (!sim) {
+      void openModal(this, {
+        title: 'SAVE UNAVAILABLE',
+        message: 'The stored save could not be loaded. Start a new game instead.',
+        buttons: [{ label: 'OK', value: 'ok', style: 'primary' }],
+      })
+      return
+    }
     this.scene.start('Office')
   }
 

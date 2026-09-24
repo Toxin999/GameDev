@@ -3,6 +3,8 @@ export interface Rng {
   range(min: number, max: number): number
   int(min: number, max: number): number
   pick<T>(items: readonly T[]): T
+  getState(): number
+  setState(state: number): void
 }
 
 function hashSeed(seed: string): number {
@@ -32,6 +34,12 @@ export function createRng(seed: string | number): Rng {
     },
     pick(items) {
       return items[Math.floor(this.next() * items.length)]!
+    },
+    getState() {
+      return a
+    },
+    setState(state) {
+      a = state >>> 0
     },
   }
 }

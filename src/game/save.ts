@@ -1,0 +1,79 @@
+import { content } from '../data/content'
+import { createSim } from '../engine/sim'
+import type { Sim } from '../engine/sim'
+import type { SimState } from '../engine/types'
+
+export const SAVE_VERSION = 1
+export const SAVE_KEY = 'iss.save'
+
+interface SaveFile {
+  version: number
+  savedAt: number
+  rngState: number
+  state: SimState
+}
+
+export function serializeSim(sim: Sim): string {
+  const file: SaveFile = {
+    version: SAVE_VERSION,
+    savedAt: Date.now(),
+    rngState: sim.rng.getState(),
+    state: sim.state,
+  }
+  return JSON.stringify(file)
+}
+
+function referencesKnownContent(state: SimState): boolean {
+  const topicIds = new Set(content.topics.map((topic) => topic.id))
+  const genreIds = new Set(content.genres.map((genre) => genre.id))
+  const platformIds = new Set(content.platforms.map((platform) => platform.id))
+
+  const project = state.project
+  if (project) {
+    if (!topicIds.has(project.topicId) || !genreIds.has(project.genreId) || !platformIds.has(project.platformId)) return false
+  }
+  for (const game of state.released) {
+    if (!topicIds.has(game.topicId) || !genreIds.has(game.genreId) || !platformIds.has(game.platformId)) return false
+  }
+  if (state.sales && !platformIds.has(state.sales.platformId)) return false
+  return true
+}
+
+export function deserializeSim(raw: string): Sim | null {
+  let parsed: Partial<SaveFile>
+  try {
+    parsed = JSON.parse(raw) as Partial<SaveFile>
+  } catch {
+    return null
+  }
+  if (parsed.version !== SAVE_VERSION || !parsed.state || typeof parsed.rngState !== 'number') return null
+  if (!referencesKnownContent(parsed.state)) return null
+  return createSim({ content, state: parsed.state, rngState: parsed.rngState })
+}
+
+export function saveGame(sim: Sim): void {
+  try {
+    window.localStorage.setItem(SAVE_KEY, serializeSim(sim))
+  } catch {
+    return
+  }
+}
+
+export function loadGame(): Sim | null {
+  let raw: string | null = null
+  try {
+    raw = window.localStorage.getItem(SAVE_KEY)
+  } catch {
+    return null
+  }
+  if (!raw) return null
+  return deserializeSim(raw)
+}
+
+export function deleteSave(): void {
+  try {
+    window.localStorage.removeItem(SAVE_KEY)
+  } catch {
+    return
+  }
+}

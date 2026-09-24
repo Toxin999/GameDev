@@ -50,12 +50,19 @@ export function dateOf(sim: Sim): GameDate {
   }
 }
 
-export function createSim(options: { content: Content; seed?: string | number }): Sim {
-  const { content, seed = 'indie-studio' } = options
+export function createSim(options: {
+  content: Content
+  seed?: string | number
+  state?: SimState
+  rngState?: number
+}): Sim {
+  const { content, seed = 'indie-studio', state, rngState } = options
+  const rng = createRng(seed)
+  if (rngState !== undefined) rng.setState(rngState)
   return {
     content,
-    rng: createRng(seed),
-    state: {
+    rng,
+    state: state ?? {
       week: 0,
       cash: content.balance.startCash,
       fans: 0,
@@ -324,6 +331,7 @@ export function releaseGame(sim: Sim): void {
     revenue: 0,
     releaseWeek: state.week,
     weeksOnSale: 0,
+    weeklyUnits,
   })
   state.phase = 'sales'
 }

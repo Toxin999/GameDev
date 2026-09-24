@@ -122,6 +122,7 @@ export interface ReleasedGame {
   revenue: number
   releaseWeek: number
   weeksOnSale: number
+  weeklyUnits: number[]
 }
 
 export interface SalesRun {
