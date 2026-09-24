@@ -54,6 +54,40 @@
     "winValue": 500000,
     "rpBase": 4,
     "rpPerPoint": 0.08,
-    "techFitBonusPerLevel": 0.04
+    "techFitBonusPerLevel": 0.04,
+    "staffPointsPerSkill": 3,
+    "staffCategoryBonus": 0.04,
+    "qaBugReductionPerSkill": 0.08,
+    "qaBugReductionMax": 0.4,
+    "qaCategoryBonus": 0.02,
+    "hireFeeWeeks": 3,
+    "severanceWeeks": 1,
+    "salaryBase": 120,
+    "salaryPerSkill": 110,
+    "candidateCount": 4,
+    "candidateSkillSpread": 2,
+    "officeTiers": [
+      {
+        "level": 1,
+        "name": "GARAGE",
+        "desks": 1,
+        "upgradeCost": 0,
+        "weeklyRent": 0
+      },
+      {
+        "level": 2,
+        "name": "SMALL OFFICE",
+        "desks": 3,
+        "upgradeCost": 30000,
+        "weeklyRent": 350
+      },
+      {
+        "level": 3,
+        "name": "STUDIO",
+        "desks": 5,
+        "upgradeCost": 120000,
+        "weeklyRent": 1100
+      }
+    ]
   }
 }

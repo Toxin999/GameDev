@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { content } from '../../src/data/content'
 import { allocateSliders } from '../../src/game/allocate'
 import {
-  availablePlatforms,
   companyValue,
   createSim,
   dateOf,
@@ -15,57 +14,12 @@ import {
   startProject,
   tick,
 } from '../../src/engine/sim'
-import type { Content, SimEvent, Sliders } from '../../src/engine/types'
+import type { SimEvent, Sliders } from '../../src/engine/types'
 import { STAGE_IDS } from '../../src/engine/types'
+import { clone, playNaiveGame, runUntil } from './helpers'
 
-function clone(): Content {
-  return structuredClone(content)
-}
-
-function allocate(content_: Content, genreId: string, budget: number): Sliders {
+function allocate(content_: ReturnType<typeof clone>, genreId: string, budget: number): Sliders {
   return allocateSliders(content_, genreId, budget)
-}
-
-interface PlayedGame {
-  topic: string
-  genre: string
-  platform: string
-  review: number
-  units: number
-  revenue: number
-}
-
-function playNaiveGame(sim: ReturnType<typeof createSim>, content_: Content): PlayedGame {
-  const platforms = availablePlatforms(sim)
-  const platform = platforms[platforms.length - 1]!
-  const genre = sim.rng.pick(content_.genres)
-  const topic = sim.rng.pick(content_.topics)
-  startProject(sim, {
-    topicId: topic.id,
-    genreId: genre.id,
-    platformId: platform.id,
-    sliders: allocateSliders(content_, genre.id, content_.balance.sliderBudget),
-  })
-  runUntil(sim, ['release', 'over'], 200)
-  const review = sim.state.currentReview!
-  releaseGame(sim)
-  runUntil(sim, ['idle', 'over'], 100)
-  const game = sim.state.released[sim.state.released.length - 1]!
-  return {
-    topic: topic.name,
-    genre: genre.name,
-    platform: platform.name,
-    review: review.overall,
-    units: game.unitsSold,
-    revenue: game.revenue,
-  }
-}
-
-function runUntil(sim: ReturnType<typeof createSim>, phases: string[], limit: number): SimEvent[] {
-  const events: SimEvent[] = []
-  let guard = 0
-  while (!phases.includes(sim.state.phase) && guard++ < limit) events.push(...tick(sim))
-  return events
 }
 
 describe('sim', () => {

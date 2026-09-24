@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { content, validateContent } from '../../src/data/content'
 import { deserializeSim } from '../../src/game/save'
+import { clone } from './helpers'
 import {
   availableGenres as engineGenres,
   availableTopics as engineTopics,
@@ -23,10 +24,6 @@ import {
   tick,
 } from '../../src/engine/sim'
 import type { Content, GameProject, Sliders } from '../../src/engine/types'
-
-function clone(): Content {
-  return structuredClone(content)
-}
 
 function grant(sim: ReturnType<typeof createSim>, rp: number, cash = 200_000): void {
   sim.state.researchPoints += rp

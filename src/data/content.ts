@@ -2,8 +2,10 @@ import balanceJson from './balance.json'
 import genresJson from './genres.json'
 import platformsJson from './platforms.json'
 import researchJson from './research.json'
+import staffJson from './staff.json'
 import topicsJson from './topics.json'
-import type { Content, ResearchConfig } from '../engine/types'
+import { REVIEW_CATEGORIES } from '../engine/types'
+import type { Content, ResearchConfig, StaffConfig } from '../engine/types'
 
 export const content: Content = {
   topics: topicsJson.topics,
@@ -11,6 +13,7 @@ export const content: Content = {
   platforms: platformsJson.platforms,
   balance: balanceJson.balance,
   research: researchJson as ResearchConfig,
+  staff: staffJson as StaffConfig,
 }
 
 function findDuplicates(ids: string[]): string[] {
@@ -94,6 +97,22 @@ export function validateContent(c: Content): string[] {
       problems.push(`topic ${topic.id} has no research node and is not a starting topic`)
     }
   }
+
+  problems.push(...findDuplicates(c.staff.roles.map((role) => role.id)).map((id) => `duplicate staff role id: ${id}`))
+  if (c.staff.names.first.length === 0 || c.staff.names.last.length === 0) problems.push('staff name pools must not be empty')
+  for (const role of c.staff.roles) {
+    if (role.category !== null && !REVIEW_CATEGORIES.includes(role.category)) {
+      problems.push(`staff role ${role.id}: unknown category ${role.category}`)
+    }
+  }
+
+  const tiers = c.balance.officeTiers
+  if (tiers.length === 0) problems.push('officeTiers must not be empty')
+  tiers.forEach((tier, index) => {
+    if (index > 0 && tier.level !== tiers[index - 1]!.level + 1) problems.push(`office tier ${tier.level}: levels must increase by one`)
+    if (tier.desks < 1) problems.push(`office tier ${tier.level}: needs at least one desk`)
+    if (tier.upgradeCost < 0 || tier.weeklyRent < 0) problems.push(`office tier ${tier.level}: costs must not be negative`)
+  })
 
   const categoryWeightSum = Object.values(c.balance.categoryWeights).reduce((a, b) => a + b, 0)
   if (Math.abs(categoryWeightSum - 1) > 0.001) problems.push(`categoryWeights sum to ${categoryWeightSum}, expected 1`)

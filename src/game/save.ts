@@ -3,7 +3,7 @@ import { createSim } from '../engine/sim'
 import type { Sim } from '../engine/sim'
 import type { SimState } from '../engine/types'
 
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 export const SAVE_KEY = 'iss.save'
 
 interface SaveFile {
@@ -46,23 +46,27 @@ export function deserializeSim(raw: string): Sim | null {
   } catch {
     return null
   }
-  if (parsed.version !== SAVE_VERSION && parsed.version !== SAVE_VERSION - 1) return null
+  if (typeof parsed.version !== 'number' || parsed.version < 1 || parsed.version > SAVE_VERSION) return null
   return simFromStoredState(parsed.state, parsed.rngState)
 }
 
-function migrateResearch(state: SimState): SimState {
+function migrateSave(state: SimState): SimState {
   const migrated = { ...state }
   if (typeof migrated.researchPoints !== 'number') migrated.researchPoints = 0
   if (typeof migrated.techLevel !== 'number') migrated.techLevel = 5
   if (!Array.isArray(migrated.unlocked)) migrated.unlocked = content.research.nodes.map((node) => node.id)
   if (migrated.research === undefined) migrated.research = null
   migrated.techLevel = Math.max(content.research.start.techLevel, migrated.techLevel)
+  if (!Array.isArray(migrated.staff)) migrated.staff = []
+  const maxLevel = content.balance.officeTiers.reduce((max, tier) => Math.max(max, tier.level), 1)
+  if (typeof migrated.officeLevel !== 'number') migrated.officeLevel = 1
+  migrated.officeLevel = Math.min(maxLevel, Math.max(1, Math.round(migrated.officeLevel)))
   return migrated
 }
 
 export function simFromStoredState(state: unknown, rngState: unknown): Sim | null {
   if (!state || typeof state !== 'object' || typeof rngState !== 'number' || !Number.isFinite(rngState)) return null
-  const candidate = migrateResearch(state as SimState)
+  const candidate = migrateSave(state as SimState)
   if (candidate.week === undefined || candidate.cash === undefined || !Array.isArray(candidate.released)) return null
   if (!referencesKnownContent(candidate)) return null
   return createSim({ content, state: candidate, rngState })

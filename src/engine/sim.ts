@@ -1,5 +1,6 @@
 import { weeklyRevenue, weeklySales } from './market'
 import { advanceResearch, availableGenres, availableTopics, researchPointsFor } from './research'
+import { pointsPerWeekFor, staffBonuses, weeklyCostFor } from './staff'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import { computeReview } from './score'
@@ -77,6 +78,8 @@ export function createSim(options: {
       techLevel: content.research.start.techLevel,
       unlocked: [],
       research: null,
+      staff: [],
+      officeLevel: 1,
     },
   }
 }
@@ -113,9 +116,9 @@ export function totalUnits(sliders: Sliders): number {
   return STAGE_IDS.reduce((sum, stage) => sum + Math.max(0, sliders[stage]), 0)
 }
 
-export function projectWeeks(content: Content, sliders: Sliders): number {
+export function projectWeeks(content: Content, sliders: Sliders, pointsPerWeek = content.balance.pointsPerWeek): number {
   const points = totalUnits(sliders) * content.balance.pointsPerUnit
-  return Math.max(1, Math.ceil(points / content.balance.pointsPerWeek))
+  return Math.max(1, Math.ceil(points / Math.max(1, pointsPerWeek)))
 }
 
 export function companyValue(sim: Sim): number {
@@ -201,6 +204,7 @@ function completeDev(sim: Sim, events: SimEvent[]): void {
     balance: content.balance,
     rng,
     techLevel: state.techLevel,
+    staffBonuses: staffBonuses(content, state),
   })
   state.currentReview = review
   state.phase = 'release'
@@ -214,7 +218,7 @@ function advanceDev(sim: Sim, events: SimEvent[]): void {
 
   const plannedPoints = STAGE_IDS.reduce((sum, stage) => sum + project.stagePoints[stage], 0)
   const before = project.spentTotal
-  project.spentTotal = Math.min(plannedPoints, before + balance.pointsPerWeek)
+  project.spentTotal = Math.min(plannedPoints, before + pointsPerWeekFor(content, state))
   syncSpent(project)
 
   let boundary = 0
@@ -225,7 +229,7 @@ function advanceDev(sim: Sim, events: SimEvent[]): void {
   project.stage = stageAtSpent(project)
   project.weeksSpent += 1
 
-  const bugChance = balance.bugChanceBase + plannedPoints * balance.bugChancePerPoint
+  const bugChance = (balance.bugChanceBase + plannedPoints * balance.bugChancePerPoint) * staffBonuses(content, state).bugChanceMultiplier
   if (sim.rng.next() < bugChance) {
     project.bugs += 1
     events.push({ type: 'bug', bugs: project.bugs })
@@ -286,7 +290,7 @@ export function tick(sim: Sim): SimEvent[] {
   if (sim.state.phase === 'over') return events
 
   sim.state.week += 1
-  sim.state.cash -= sim.content.balance.weeklyCost
+  sim.state.cash -= weeklyCostFor(sim.content, sim.state)
   events.push({ type: 'week', date: dateOf(sim) })
 
   if (sim.state.phase === 'dev') advanceDev(sim, events)
@@ -307,7 +311,7 @@ export function fixBug(sim: Sim): SimEvent[] {
   if (state.cash < cost) throw new Error(`not enough cash to fix bugs: need ${cost}`)
 
   state.project.bugs -= 1
-  state.cash -= cost + content.balance.weeklyCost
+  state.cash -= cost + weeklyCostFor(content, state)
   state.week += 1
   events.push({ type: 'bug-fixed', bugs: state.project.bugs, cost })
   events.push({ type: 'week', date: dateOf(sim) })
@@ -321,6 +325,7 @@ export function fixBug(sim: Sim): SimEvent[] {
       balance: content.balance,
       rng: sim.rng,
       techLevel: state.techLevel,
+      staffBonuses: staffBonuses(content, state),
     })
     state.currentReview = review
     events.push({ type: 'review', review })

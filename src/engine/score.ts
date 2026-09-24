@@ -2,6 +2,10 @@ import type { Rng } from './rng'
 import { CATEGORY_STAGE, REVIEW_CATEGORIES, STAGE_CATEGORY, STAGE_IDS } from './types'
 import type { Balance, GameProject, Genre, Platform, Review, ReviewCategory, StageId, Topic } from './types'
 
+export interface StaffScoreBonus {
+  categories: Partial<Record<ReviewCategory, number>>
+}
+
 export interface ScoreInput {
   project: GameProject
   topic: Topic
@@ -10,6 +14,7 @@ export interface ScoreInput {
   balance: Balance
   rng: Rng
   techLevel?: number
+  staffBonuses?: StaffScoreBonus
 }
 
 export interface ScoreBreakdown {
@@ -18,6 +23,7 @@ export interface ScoreBreakdown {
   techFit: number
   sliderFit: Record<ReviewCategory, number>
   contextFit: Record<ReviewCategory, number>
+  staffBonus: Record<ReviewCategory, number>
   bugFactor: number
   categories: Record<ReviewCategory, number>
   overall: number
@@ -55,7 +61,7 @@ export function techFitFor(project: GameProject, platform: Platform, balance: Ba
 }
 
 export function scoreProject(input: ScoreInput): ScoreBreakdown {
-  const { project, topic, genre, platform, balance, rng, techLevel = 1 } = input
+  const { project, topic, genre, platform, balance, rng, techLevel = 1, staffBonuses } = input
 
   const totalUnits = STAGE_IDS.reduce((sum, stage) => sum + project.sliders[stage], 0)
   const topicFit = topicFitFor(topic, project.genreId, balance)
@@ -79,9 +85,12 @@ export function scoreProject(input: ScoreInput): ScoreBreakdown {
 
   const bugFactor = Math.max(balance.bugPenaltyMin, 1 - project.bugs * balance.bugPenaltyPerBug)
   const categories = {} as Record<ReviewCategory, number>
+  const staffBonus = {} as Record<ReviewCategory, number>
 
   for (const category of REVIEW_CATEGORIES) {
-    const raw = balance.sliderWeight * sliderFit[category] + balance.contextWeight * contextFit[category]
+    const bonus = staffBonuses?.categories[category] ?? 0
+    staffBonus[category] = bonus
+    const raw = balance.sliderWeight * sliderFit[category] + balance.contextWeight * contextFit[category] + bonus
     const jittered = raw * bugFactor * (1 + rng.range(-balance.variance, balance.variance))
     categories[category] = round1(balance.minScore + clamp01(jittered) * (balance.maxScore - balance.minScore))
   }
@@ -97,6 +106,7 @@ export function scoreProject(input: ScoreInput): ScoreBreakdown {
     techFit,
     sliderFit,
     contextFit,
+    staffBonus,
     bugFactor,
     categories,
     overall: round1(Math.min(balance.maxScore, Math.max(balance.minScore, overallRaw))),

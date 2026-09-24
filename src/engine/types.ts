@@ -86,6 +86,38 @@ export interface Balance {
   rpBase: number
   rpPerPoint: number
   techFitBonusPerLevel: number
+  staffPointsPerSkill: number
+  staffCategoryBonus: number
+  qaBugReductionPerSkill: number
+  qaBugReductionMax: number
+  qaCategoryBonus: number
+  hireFeeWeeks: number
+  severanceWeeks: number
+  salaryBase: number
+  salaryPerSkill: number
+  candidateCount: number
+  candidateSkillSpread: number
+  officeTiers: OfficeTier[]
+}
+
+export interface StaffRole {
+  id: string
+  name: string
+  category: ReviewCategory | null
+  qa?: boolean
+}
+
+export interface StaffConfig {
+  names: { first: string[]; last: string[] }
+  roles: StaffRole[]
+}
+
+export interface OfficeTier {
+  level: number
+  name: string
+  desks: number
+  upgradeCost: number
+  weeklyRent: number
 }
 
 export type ResearchKind = 'topic' | 'genre' | 'tech'
@@ -116,12 +148,22 @@ export interface ResearchTask {
   weeksLeft: number
 }
 
+export interface StaffMember {
+  id: string
+  name: string
+  roleId: string
+  skill: number
+  salary: number
+  hiredWeek: number
+}
+
 export interface Content {
   topics: Topic[]
   genres: Genre[]
   platforms: Platform[]
   balance: Balance
   research: ResearchConfig
+  staff: StaffConfig
 }
 
 export type Sliders = Record<StageId, number>
@@ -188,6 +230,8 @@ export interface SimState {
   techLevel: number
   unlocked: string[]
   research: ResearchTask | null
+  staff: StaffMember[]
+  officeLevel: number
 }
 
 export type SimEvent =
@@ -202,4 +246,7 @@ export type SimEvent =
   | { type: 'research-started'; nodeId: string }
   | { type: 'research-complete'; nodeId: string }
   | { type: 'research-points'; amount: number; total: number }
+  | { type: 'staff-hired'; member: StaffMember }
+  | { type: 'staff-left'; member: StaffMember; severance: number }
+  | { type: 'office-upgraded'; level: number; cost: number }
   | { type: 'game-over'; outcome: Outcome }
