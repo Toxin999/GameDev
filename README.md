@@ -4,7 +4,9 @@ Web-based game-dev studio tycoon — run an indie studio from your garage: pick 
 
 Inspired by the genre, not a copy: all content, balance values and art are original.
 
-**Play:** not deployed yet — see [Deploy](#deploy) (target account is pinned in `wrangler.jsonc`)
+**Play:** https://indie-studio-sim.intanongson.workers.dev
+
+Deploys are pinned to the account in `wrangler.jsonc`; see [Deploy](#deploy).
 
 ## Stack
 
