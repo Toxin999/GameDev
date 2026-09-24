@@ -46,9 +46,16 @@ export function deserializeSim(raw: string): Sim | null {
   } catch {
     return null
   }
-  if (parsed.version !== SAVE_VERSION || !parsed.state || typeof parsed.rngState !== 'number') return null
-  if (!referencesKnownContent(parsed.state)) return null
-  return createSim({ content, state: parsed.state, rngState: parsed.rngState })
+  if (parsed.version !== SAVE_VERSION) return null
+  return simFromStoredState(parsed.state, parsed.rngState)
+}
+
+export function simFromStoredState(state: unknown, rngState: unknown): Sim | null {
+  if (!state || typeof state !== 'object' || typeof rngState !== 'number' || !Number.isFinite(rngState)) return null
+  const candidate = state as SimState
+  if (candidate.week === undefined || candidate.cash === undefined || !Array.isArray(candidate.released)) return null
+  if (!referencesKnownContent(candidate)) return null
+  return createSim({ content, state: candidate, rngState })
 }
 
 export function saveGame(sim: Sim): void {

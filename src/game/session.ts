@@ -1,6 +1,7 @@
 import { content } from '../data/content'
 import { createSim } from '../engine/sim'
 import type { Sim } from '../engine/sim'
+import { maybePushCloudSave } from './cloud'
 import { SAVE_KEY, deleteSave, loadGame, saveGame } from './save'
 
 export interface Settings {
@@ -77,7 +78,9 @@ export function resumeSession(): Sim | null {
 }
 
 export function saveSession(): void {
-  if (session) saveGame(session)
+  if (!session) return
+  saveGame(session)
+  maybePushCloudSave(session)
 }
 
 export function clearSession(): void {

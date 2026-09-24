@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cf:types": "wrangler types",
+    "cf:dev": "wrangler dev",
+    "cf:db:local": "wrangler d1 execute indie-studio-sim --local --file worker/schema.sql",
+    "cf:db:remote": "wrangler d1 execute indie-studio-sim --remote --file worker/schema.sql",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "phaser": "^4.2.1"
@@ -15,6 +20,7 @@
   "devDependencies": {
     "typescript": "^7.0.2",
     "vite": "^8.3.1",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "wrangler": "^4.138.0"
   }
 }

@@ -21,6 +21,7 @@ import {
 } from '../game/officeLayout'
 import type { Direction } from '../game/officeLayout'
 import type { GameProject } from '../engine/types'
+import { getStudioName, submitScore } from '../game/cloud'
 import { getSession, resumeSession, saveSession, startNewSession } from '../game/session'
 import { Button } from '../ui/Button'
 import { openModal } from '../ui/Modal'
@@ -252,7 +253,7 @@ export class OfficeScene extends Phaser.Scene {
     hud.lineStyle(2, COLOR.border, 1)
     hud.strokeRect(0, 0, GAME_WIDTH, 64)
 
-    this.add.text(24, 22, 'GARAGE STUDIO', textStyle(FONT_SIZE.sm, COLOR.accentCss, true)).setDepth(501)
+    this.add.text(24, 22, getStudioName(), textStyle(FONT_SIZE.sm, COLOR.accentCss, true)).setDepth(501)
     this.moneyText = this.add.text(260, 22, '', textStyle(FONT_SIZE.sm, COLOR.moneyCss)).setDepth(501)
     this.dateText = this.add.text(400, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
     this.fansText = this.add.text(570, 22, '', textStyle(FONT_SIZE.sm, COLOR.text)).setDepth(501)
@@ -304,6 +305,7 @@ export class OfficeScene extends Phaser.Scene {
     if (events.some((event) => event.type === 'dev-complete')) this.onDevComplete()
     if (salesEnd && salesEnd.type === 'sales-end') {
       this.toast(`${salesEnd.game.unitsSold.toLocaleString('en-US')} UNITS  $${salesEnd.game.revenue.toLocaleString('en-US')}`)
+      void submitScore(this.sim)
       this.openReport()
     }
     if (this.sim.state.phase === 'over') this.onGameOver()
@@ -423,6 +425,7 @@ export class OfficeScene extends Phaser.Scene {
 
   private onGameOver(): void {
     saveSession()
+    void submitScore(this.sim)
     this.scene.launch('GameOver')
     this.scene.pause()
   }

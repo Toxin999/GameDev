@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../config'
-import { getSession, hasSession, hasSave, resumeSession, startNewSession } from '../game/session'
+import { getSession, resumeSession, startNewSession } from '../game/session'
+import { pullCloudSave } from '../game/cloud'
 import { Button } from '../ui/Button'
 import type { ButtonStyle } from '../ui/Button'
 import { openModal } from '../ui/Modal'
@@ -41,8 +42,8 @@ export class MainMenuScene extends Phaser.Scene {
 
     const definitions: MenuDefinition[] = [
       { label: 'NEW GAME', style: 'primary', enabled: true, onClick: () => this.startNewGame() },
-      { label: 'CONTINUE', style: 'default', enabled: hasSave() || hasSession(), onClick: () => this.continueGame() },
-      { label: 'LEADERBOARD', style: 'default', enabled: false, onClick: () => undefined },
+      { label: 'CONTINUE', style: 'default', enabled: true, onClick: () => this.continueGame() },
+      { label: 'LEADERBOARD', style: 'default', enabled: true, onClick: () => this.scene.start('Leaderboard') },
       { label: 'SETTINGS', style: 'default', enabled: true, onClick: () => this.openSettings() },
     ]
 
@@ -96,16 +97,28 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private continueGame(): void {
-    const sim = getSession() ?? resumeSession()
-    if (!sim) {
-      void openModal(this, {
-        title: 'SAVE UNAVAILABLE',
-        message: 'The stored save could not be loaded. Start a new game instead.',
-        buttons: [{ label: 'OK', value: 'ok', style: 'primary' }],
-      })
+    const local = getSession() ?? resumeSession()
+    if (local) {
+      this.scene.start('Office')
       return
     }
-    this.scene.start('Office')
+
+    void openModal(this, {
+      title: 'LOOKING FOR A SAVE',
+      message: 'No local save found. Checking the cloud backup...',
+      buttons: [{ label: 'CHECK', value: 'check', style: 'primary' }],
+    }).then(async () => {
+      const remote = await pullCloudSave()
+      if (remote) {
+        this.scene.start('Office')
+        return
+      }
+      void openModal(this, {
+        title: 'NO SAVE FOUND',
+        message: 'Nothing on this device and nothing in the cloud. Start a new game instead.',
+        buttons: [{ label: 'OK', value: 'ok', style: 'primary' }],
+      })
+    })
   }
 
   private openSettings(): void {

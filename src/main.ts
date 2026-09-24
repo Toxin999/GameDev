@@ -6,6 +6,7 @@ import { BootScene } from './scenes/BootScene'
 import { DevSandboxScene } from './scenes/DevSandboxScene'
 import { MainMenuScene } from './scenes/MainMenuScene'
 import { GameOverScene } from './scenes/GameOverScene'
+import { LeaderboardScene } from './scenes/LeaderboardScene'
 import { OfficeScene } from './scenes/OfficeScene'
 import { ProjectSetupScene } from './scenes/ProjectSetupScene'
 import { ReportScene } from './scenes/ReportScene'
@@ -32,6 +33,7 @@ new Phaser.Game({
     ReviewScene,
     ReportScene,
     GameOverScene,
+    LeaderboardScene,
     DevSandboxScene,
     AssetInspectorScene,
   ],

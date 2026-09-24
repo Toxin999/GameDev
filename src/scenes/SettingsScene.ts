@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../config'
+import { getStudioName, pickStudioName, setStudioName } from '../game/cloud'
 import { loadSettings, saveSettings } from '../game/session'
 import type { Settings } from '../game/session'
 import { Button } from '../ui/Button'
@@ -11,6 +12,7 @@ export class SettingsScene extends Phaser.Scene {
   private settings: Settings = loadSettings()
   private returnScene = 'MainMenu'
   private fullscreenButton!: Button
+  private nameText!: Phaser.GameObjects.Text
 
   constructor() {
     super('Settings')
@@ -61,9 +63,25 @@ export class SettingsScene extends Phaser.Scene {
       },
     })
 
+    this.nameText = this.add.text(0, 0, '', textStyle(FONT_SIZE.sm, COLOR.text))
+    this.refreshName()
+    centerText(this.nameText, centerX - 90, centerY + 60)
+
+    new Button(this, {
+      x: centerX + 150,
+      y: centerY + 60,
+      width: 180,
+      height: 44,
+      label: 'RANDOMIZE',
+      onClick: () => {
+        setStudioName(pickStudioName())
+        this.refreshName()
+      },
+    })
+
     this.fullscreenButton = new Button(this, {
       x: centerX,
-      y: centerY + 76,
+      y: centerY + 126,
       width: 360,
       height: 48,
       label: this.fullscreenLabel(),
@@ -75,7 +93,7 @@ export class SettingsScene extends Phaser.Scene {
 
     new Button(this, {
       x: centerX,
-      y: centerY + 156,
+      y: centerY + 190,
       width: 260,
       height: 52,
       label: 'BACK',
@@ -84,9 +102,13 @@ export class SettingsScene extends Phaser.Scene {
     })
 
     const hint = this.add.text(0, 0, 'ESC TO CLOSE', textStyle(FONT_SIZE.sm, COLOR.textDim))
-    centerText(hint, centerX, centerY + 212)
+    centerText(hint, centerX, centerY + 240)
 
     this.input.keyboard?.on('keydown-ESC', () => this.close())
+  }
+
+  private refreshName(): void {
+    this.nameText.setText(`STUDIO ${getStudioName()}`)
   }
 
   private fullscreenLabel(): string {
