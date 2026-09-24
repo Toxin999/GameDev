@@ -1,0 +1,40 @@
+{
+  "genres": [
+    {
+      "id": "action",
+      "name": "Action",
+      "audience": 1.15,
+      "ideal": { "engine": 0.2, "gameplay": 0.4, "story": 0.1, "graphics": 0.2, "sound": 0.1 }
+    },
+    {
+      "id": "adventure",
+      "name": "Adventure",
+      "audience": 1.0,
+      "ideal": { "engine": 0.1, "gameplay": 0.3, "story": 0.35, "graphics": 0.15, "sound": 0.1 }
+    },
+    {
+      "id": "rpg",
+      "name": "RPG",
+      "audience": 1.05,
+      "ideal": { "engine": 0.15, "gameplay": 0.3, "story": 0.3, "graphics": 0.15, "sound": 0.1 }
+    },
+    {
+      "id": "sim",
+      "name": "Simulation",
+      "audience": 0.9,
+      "ideal": { "engine": 0.3, "gameplay": 0.35, "story": 0.05, "graphics": 0.15, "sound": 0.15 }
+    },
+    {
+      "id": "strategy",
+      "name": "Strategy",
+      "audience": 0.85,
+      "ideal": { "engine": 0.25, "gameplay": 0.35, "story": 0.1, "graphics": 0.15, "sound": 0.15 }
+    },
+    {
+      "id": "casual",
+      "name": "Casual",
+      "audience": 1.1,
+      "ideal": { "engine": 0.15, "gameplay": 0.45, "story": 0.05, "graphics": 0.25, "sound": 0.1 }
+    }
+  ]
+}
