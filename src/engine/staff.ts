@@ -66,6 +66,7 @@ export function staffCandidates(content: Content, state: SimState): StaffCandida
   const skillMax = Math.min(5, state.officeLevel + balance.candidateSkillSpread)
   const bucket = Math.floor(state.week / balance.weeksPerMonth)
 
+  const hired = new Set(state.staff.map((member) => member.id))
   return Array.from({ length: balance.candidateCount }, (_, index) => {
     const skill = rng.int(skillMin, skillMax)
     const role = rng.pick(staff.roles)
@@ -78,7 +79,7 @@ export function staffCandidates(content: Content, state: SimState): StaffCandida
       salary: salaryFor(balance, skill),
       hireFee: hireFeeFor(balance, skill),
     }
-  })
+  }).filter((candidate) => !hired.has(candidate.id))
 }
 
 export function weeklyCostFor(content: Content, state: SimState): number {
@@ -132,6 +133,7 @@ export function hireStaff(sim: { content: Content; state: SimState }, candidateI
 
   const candidate = staffCandidates(content, state).find((entry) => entry.id === candidateId)
   if (!candidate) throw new Error('candidate is no longer available')
+  if (state.staff.some((member) => member.id === candidate.id)) throw new Error('already on the team')
 
   if (state.cash < candidate.hireFee) {
     throw new Error(`not enough cash: need ${candidate.hireFee}`)

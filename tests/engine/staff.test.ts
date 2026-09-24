@@ -221,6 +221,20 @@ describe('hiring, firing and offices', () => {
     expect(() => hireStaff(sim, candidate.id)).toThrow(/office is full/)
   })
 
+  it('removes hired people from the candidate pool', () => {
+    const c = clone()
+    const sim = createSim({ content: c, seed: 'pool-removal' })
+    grant(sim, 0, 200_000)
+    upgradeOffice(sim)
+    const before = staffCandidates(c, sim.state)
+    hireStaff(sim, before[0]!.id)
+
+    const after = staffCandidates(c, sim.state)
+    expect(after).toHaveLength(before.length - 1)
+    expect(after.some((candidate) => candidate.id === before[0]!.id)).toBe(false)
+    expect(() => hireStaff(sim, before[0]!.id)).toThrow(/no longer available/)
+  })
+
   it('hires a candidate for the recruiting fee', () => {
     const c = clone()
     const sim = createSim({ content: c, seed: 'hire' })

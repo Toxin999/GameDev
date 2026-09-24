@@ -13,6 +13,7 @@ import { ReportScene } from './scenes/ReportScene'
 import { ResearchScene } from './scenes/ResearchScene'
 import { ReviewScene } from './scenes/ReviewScene'
 import { SettingsScene } from './scenes/SettingsScene'
+import { StaffScene } from './scenes/StaffScene'
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -35,6 +36,7 @@ new Phaser.Game({
     ReviewScene,
     ReportScene,
     ResearchScene,
+    StaffScene,
     GameOverScene,
     LeaderboardScene,
     DevSandboxScene,

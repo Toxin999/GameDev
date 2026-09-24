@@ -35,9 +35,33 @@ export const FURNITURE = {
   rugRight: { sheet: 'furniture', frame: 26 },
 } satisfies Record<string, TileRef>
 
-export const DESK_X = 736
 export const DESK_Y = 352
-export const DESK_SPOT = { x: 760, y: 424 }
+export const DESK_ROW = 5
+
+const DESK_COLUMNS: Record<number, number[]> = {
+  1: [9],
+  2: [5, 9, 13],
+  3: [5, 8, 11, 14, 17],
+}
+
+export interface DeskUnit {
+  leftCol: number
+  center: number
+  spot: { x: number; y: number }
+}
+
+export function deskUnits(officeLevel: number): DeskUnit[] {
+  const columns = DESK_COLUMNS[officeLevel] ?? DESK_COLUMNS[1]!
+  return columns.map((leftCol) => ({
+    leftCol,
+    center: ROOM.x + leftCol * TILE + TILE,
+    spot: { x: ROOM.x + leftCol * TILE + TILE, y: DESK_Y + TILE + TILE / 2 },
+  }))
+}
+
+export function deskCapacityFor(officeLevel: number): number {
+  return deskUnits(officeLevel).length
+}
 
 export const WAYPOINTS = [
   { x: 1010, y: 300 },

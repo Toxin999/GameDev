@@ -26,7 +26,10 @@ Deploys are pinned to the account in `wrangler.jsonc`; see [Deploy](#deploy).
 6. Every release pays **research points** (more points for bigger, better reviewed games).
 7. `RESEARCH` spends points, cash and weeks to unlock topics, genres and engine tech levels.
    Higher engine tech unlocks newer platforms, and it runs in parallel with development.
-8. Grow the studio value to $500,000 without running out of cash.
+8. `STAFF` hires specialists (programmer, designer, writer, artist, composer, QA) and upgrades the
+   office. Specialists speed up development and lift their category, QA suppresses bugs, and everyone
+   costs a salary every week — the office tier limits how many desks you have.
+9. Grow the studio value to $500,000 without running out of cash.
 
 Mouse or touch both work; `T` ticks a week and `R` releases in short bursts (dev convenience).
 `?scene=Office|DevSandbox|AssetInspector|ProjectSetup|Review|Report|GameOver|Leaderboard` jumps
@@ -39,7 +42,8 @@ straight to a scene when developing.
 - Audio: Web Audio starts after the first click, so the first click of a session may be silent.
 - Saves live in localStorage and are backed up to the cloud; without a network the game is fully
   playable and syncs later.
-- Saves made before the research update keep every topic, genre and tech level unlocked.
+- Saves made before the research update keep every topic, genre and tech level unlocked; saves from
+  before the staff update open in the garage with no staff.
 
 ## Development
 
@@ -112,6 +116,6 @@ trust-based apart from sanity caps.
 | M6 | Cloud saves + leaderboard (Workers + D1) |
 | M7 | Polish, balance, audio, mobile, deploy |
 | M8 | Research system (unlock topics, genres and engine tech levels) |
+| M9 | Staff hiring, salaries and office expansion |
 
-Next ideas: staff hiring and studio expansion, cross-device sync codes, marketing campaigns,
-post-release patches and a small-screen layout.
+Next ideas: cross-device sync codes, marketing campaigns, post-release patches and a small-screen layout.

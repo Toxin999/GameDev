@@ -19,6 +19,7 @@ import {
 import { platformFitFor, topicFitFor } from '../engine/score'
 import { STAGE_IDS } from '../engine/types'
 import type { Genre, Platform, Sliders, StageId, Topic } from '../engine/types'
+import { pointsPerWeekFor } from '../engine/staff'
 import { allocateSliders } from '../game/allocate'
 import { playSfx } from '../game/audio'
 import { getSession, startNewSession } from '../game/session'
@@ -236,7 +237,7 @@ export class ProjectSetupScene extends Phaser.Scene {
       `TOPIC FIT    ${fitStars(topicFit)}`,
       `PLATFORM FIT ${fitStars(platformFit)}`,
       '',
-      `FULL PLAN $${cost.toLocaleString('en-US')} / ${projectWeeks(content, suggested)}W`,
+      `FULL PLAN $${cost.toLocaleString('en-US')} / ${projectWeeks(content, suggested, pointsPerWeekFor(content, this.sim.state))}W`,
     ]
     lines.forEach((line, index) => this.summaryLines[index]!.setText(line))
   }
@@ -332,7 +333,7 @@ export class ProjectSetupScene extends Phaser.Scene {
     const cost = platform ? projectCost(content, platform, this.sliders) : 0
     const cash = this.sim.state.cash
 
-    const weeks = projectWeeks(content, this.sliders)
+    const weeks = projectWeeks(content, this.sliders, pointsPerWeekFor(content, this.sim.state))
     this.allocatedText.setText(`ALLOCATED ${units} / ${content.balance.sliderBudget} UNITS · ${weeks} ${weeks === 1 ? 'WEEK' : 'WEEKS'}`)
     this.costText.setText(`COST $${cost.toLocaleString('en-US')} · CASH $${Math.round(cash).toLocaleString('en-US')}`)
 
