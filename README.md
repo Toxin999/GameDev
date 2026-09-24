@@ -4,7 +4,7 @@ Web-based game-dev studio tycoon — run an indie studio from your garage: pick 
 
 Inspired by the genre, not a copy: all content, balance values and art are original.
 
-**Play:** https://indie-studio-sim.wayha-sokxay-technology.workers.dev
+**Play:** not deployed yet — see [Deploy](#deploy) (target account is pinned in `wrangler.jsonc`)
 
 ## Stack
 
@@ -61,13 +61,26 @@ npm run dev           # Vite serves the game, API base points at 127.0.0.1:8787 
 
 ### Deploy
 
+Deploys are manual and pinned to one account: `wrangler.jsonc` carries the `account_id`, and
+`npm run deploy:prod` refuses to run when the active Wrangler profile cannot reach that account
+(and when `CLOUDFLARE_API_TOKEN` is set, because it overrides profiles).
+
 ```bash
-npm run cf:db:remote  # apply the schema to the remote D1 database
-npm run deploy        # build the game and deploy Worker + assets in one shot
+# one-time per machine: auth profile bound to this directory
+wrangler auth create <profile>
+wrangler auth activate <profile> .
+
+# one-time per account: database + schema
+wrangler d1 create indie-studio-sim         # paste the id into wrangler.jsonc
+npm run cf:db:remote
+
+# checks and deploys
+npm run deploy:check   # whoami + account assert + wrangler deploy --dry-run
+npm run deploy:prod    # build, then deploy Worker + assets
 ```
 
-`wrangler.jsonc` holds the Worker name, asset directory, D1 binding and observability settings.
-Run `npm run cf:types` after changing it (generates `worker-configuration.d.ts`).
+`wrangler.jsonc` holds the Worker name, account, asset directory, D1 binding and observability
+settings. Run `npm run cf:types` after changing it (generates `worker-configuration.d.ts`).
 
 ## API
 

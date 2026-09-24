@@ -12,7 +12,8 @@
     "cf:dev": "wrangler dev",
     "cf:db:local": "wrangler d1 execute indie-studio-sim --local --file worker/schema.sql",
     "cf:db:remote": "wrangler d1 execute indie-studio-sim --remote --file worker/schema.sql",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy:prod": "node scripts/deploy.mjs",
+    "deploy:check": "node scripts/deploy.mjs --check"
   },
   "dependencies": {
     "phaser": "^4.2.1"
